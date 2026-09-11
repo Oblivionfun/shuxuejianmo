@@ -12,6 +12,8 @@ import time
 from cumcm_b.protocol import HttpTransport, RobotClient
 from cumcm_b.policy import CoveragePolicy
 
+LATEST_Q3_STRATEGY = "adaptive_q25"
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -44,7 +46,7 @@ def main():
             "adaptive_q25_fine",
             "adaptive_median",
         ],
-        help="q3 defaults to adaptive_q25; q4 defaults to adaptive",
+        help="q3 latest stable default is adaptive_q25; q4 defaults to adaptive",
     )
     args = parser.parse_args()
     if not args.robot_id or not args.practice_ready:
@@ -72,7 +74,7 @@ def main():
     client = RobotClient(
         HttpTransport(args.base_url), args.robot_id, log_path=out / "actions.jsonl"
     )
-    strategy = args.strategy or ("adaptive_q25" if args.question == 3 else "adaptive")
+    strategy = args.strategy or (LATEST_Q3_STRATEGY if args.question == 3 else "adaptive")
     weight = 0.04 if strategy in {"adaptive_q25", "adaptive_q25_fine"} else 0.02
     if strategy == "adaptive_q10_dynamic":
         weight = 0.02

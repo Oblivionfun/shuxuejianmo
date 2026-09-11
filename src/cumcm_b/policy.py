@@ -174,7 +174,10 @@ class CoveragePolicy:
                 objective=objective,
                 angle_step=(
                     11.25
-                    if self.strategy in {"adaptive_q25_fine", "adaptive_q10_dynamic_fine"}
+                    if self.strategy in {
+                        "adaptive_q25_fine",
+                        "adaptive_q10_dynamic_fine",
+                    }
                     else self.candidate_angle_step
                 ),
             )

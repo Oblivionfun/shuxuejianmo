@@ -36,6 +36,14 @@ $$T=L/5+N_{\mathrm{switch}}+5N_{\mathrm{measure}}+3N_{\mathrm{clear\ attempt}}+2
 
 第三问三局平均 **390.18 s/源**，第四问三角方案三局平均 **994.17 s/源**。七份官方日志均在本机保留且原始审核核对了 2217 条动作、92 次成功清除；GitHub 只发布匿名统计。公开汇总不能独立重建模拟器隐藏场景，正式成绩仍为空。
 
+## 最新 q3 策略组演练
+
+完整策略组汇总见 [`q3_official_strategy_summary_20260911.csv`](../results/practice/q3_official_strategy_summary_20260911.csv)，测评说明见 [`q3_official_practice_report_20260911.md`](../reports/q3_official_practice_report_20260911.md)。25 局带有 `summary.json` 的记录均满足完整证书和正常退出，另有 3 个目录缺少汇总文件，未计入有效样本。所有策略均为 0 兜底动作。
+
+按合并单源时间，`adaptive_q25` 最低，为 **303.224 s/源**（4 局、平均清除 14.75 个）；`adaptive_median` 为 325.385 s/源；`adaptive_q10_dynamic` 虽然平均总虚拟时间最低（4072.43 s），但平均清除数只有 11.67 个，合并单源时间为 349.065 s/源。因此当前 q3 默认仍为 `adaptive_q25`，动态 q10 作为研究对照。
+
+所有记录的 `scenario_origin` 都表示“用户在模拟器中选择演练、客户端未通过 API 验证模式”。这些数据是官方演练案例证据，不是正式成绩；原始逐动作日志包含机器人标识，只保留在共享工作台，不进入 Git。
+
 ## 几何结论与限制
 
 - q1 的边长 39 m 等边三角形有直径 39 m、最小包围圆半径约 22.5167 m，构成“直径 ≤ 40 m 就能一次清除”的反例。

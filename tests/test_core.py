@@ -18,6 +18,7 @@ from cumcm_b.geometry import (
 from cumcm_b.synthetic import Source, SyntheticArena, generate_sources
 from cumcm_b.protocol import RobotClient, ProtocolError, HttpTransport
 from cumcm_b.policy import CoveragePolicy, stations, triangular_cover
+from cumcm_b.practice import LATEST_Q3_STRATEGY
 
 
 def triangle_observations(side=39.0):
@@ -207,6 +208,10 @@ def test_candidate_quantile_objectives_are_explicit():
     assert rows[0]["score"] <= rows[-1]["score"]
     with pytest.raises(ValueError, match="objective"):
         candidate_points(belief, np.zeros(2), objective="unknown")
+
+
+def test_latest_q3_strategy_is_the_evidence_backed_default():
+    assert LATEST_Q3_STRATEGY == "adaptive_q25"
 
 
 @pytest.mark.parametrize("question", [3, 4])
