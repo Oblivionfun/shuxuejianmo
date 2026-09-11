@@ -198,6 +198,17 @@ def test_http_transport_exact_retry():
     assert transport.session.bodies[0] == transport.session.bodies[1]
 
 
+def test_candidate_quantile_objectives_are_explicit():
+    belief = Belief()
+    belief.observe([0, 0], 0)
+    rows = candidate_points(belief, np.zeros(2), objective="q25")
+    assert rows
+    assert all("q25_linearized_m" in row and "worst_linearized_m" in row for row in rows)
+    assert rows[0]["score"] <= rows[-1]["score"]
+    with pytest.raises(ValueError, match="objective"):
+        candidate_points(belief, np.zeros(2), objective="unknown")
+
+
 @pytest.mark.parametrize("question", [3, 4])
 def test_complete_synthetic_case(question):
     sources = generate_sources(20260911, question, count=10)

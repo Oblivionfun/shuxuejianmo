@@ -75,7 +75,14 @@ class CoveragePolicy:
         max_active=6,
         coverage="triangular",
     ):
-        if strategy not in ("adaptive", "fixed"):
+        if strategy not in (
+            "adaptive",
+            "fixed",
+            "adaptive_p90",
+            "adaptive_q10",
+            "adaptive_q25",
+            "adaptive_median",
+        ):
             raise ValueError("unknown strategy")
         self.client = client
         self.question = question
@@ -128,7 +135,17 @@ class CoveragePolicy:
                 if not self.clear_at(k, c, "enclosing_circle"):
                     raise ProtocolError("certified sub-20m clear failed")
                 return
-            candidates = candidate_points(track.belief, self.client.position, self.travel_weight)
+            objective = {
+                "adaptive": "worst",
+                "adaptive_p90": "p90",
+                "adaptive_q25": "q25",
+                "adaptive_q10": "q10",
+                "adaptive_median": "median",
+                "fixed": "worst",
+            }[self.strategy]
+            candidates = candidate_points(
+                track.belief, self.client.position, self.travel_weight, objective=objective
+            )
             choices = [
                 row
                 for row in candidates

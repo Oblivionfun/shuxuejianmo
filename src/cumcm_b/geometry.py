@@ -261,7 +261,7 @@ class Belief:
         )
 
 
-def candidate_points(belief, current, travel_weight=0.02):
+def candidate_points(belief, current, travel_weight=0.02, objective="worst"):
     """Conservative reception filtering; deterministic geometry/travel ranking."""
     poly = belief.polygon
     c, rad = enclosing_circle(poly)
@@ -321,14 +321,28 @@ def candidate_points(belief, current, travel_weight=0.02):
             )
         uncertainty[near] = 5.0
         worst = float(np.max(uncertainty))
+        finite = uncertainty[np.isfinite(uncertainty)]
+        q10 = float(np.quantile(finite, 0.10)) if len(finite) else math.inf
+        q25 = float(np.quantile(finite, 0.25)) if len(finite) else math.inf
+        median = float(np.median(finite)) if len(finite) else math.inf
+        p90 = float(np.quantile(finite, 0.90)) if len(finite) else math.inf
         distance = float(np.linalg.norm(q - current))
         if np.isfinite(worst):
+            geometric = {"worst": worst, "p90": p90, "q10": q10, "q25": q25, "median": median}.get(
+                objective
+            )
+            if geometric is None:
+                raise ValueError("objective must be worst, p90, or median")
             results.append(
                 {
                     "position": q,
                     "worst_linearized_m": worst,
+                    "p90_linearized_m": p90,
+                    "median_linearized_m": median,
+                    "q25_linearized_m": q25,
+                    "q10_linearized_m": q10,
                     "distance_m": distance,
-                    "score": worst + travel_weight * distance,
+                    "score": geometric + travel_weight * distance,
                     "max_source_distance_m": float(np.max(np.linalg.norm(poly - q, axis=1))),
                 }
             )

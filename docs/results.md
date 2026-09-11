@@ -44,3 +44,5 @@ $$T=L/5+N_{\mathrm{switch}}+5N_{\mathrm{measure}}+3N_{\mathrm{clear\ attempt}}+2
 - 106 个合成运行说明给定场景下的完整性；7 局演练说明这些案例的接口表现。二者都不能映射为奖项、总体成功率或领先其他队伍的比例。
 
 六局跨平台离线反馈重放逐动作一致；一局在约 25 m 等距光学格子发生浮点排序差异，但集合相同，已记录为非阻塞差异。下一步优先优化移动路径和定向源的兜底开销。
+
+q3 的主动测角优化单独记录在 [优化讨论](optimization.md) 和 [`q3_optimization.json`](../results/synthetic/q3_optimization.json)；它不改写上表的历史基线结果。

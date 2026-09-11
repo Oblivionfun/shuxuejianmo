@@ -4,7 +4,7 @@
 
 从有界误差几何、主动测向到全域覆盖的可复现 Python 工程。
 
-[快速理解](docs/overview.md) · [模型与证明](docs/model.md) · [实验结论](docs/results.md) · [复现指南](docs/reproduction.md) · [Windows 演练](docs/simulator.md)
+[快速理解](docs/overview.md) · [模型与证明](docs/model.md) · [实验结论](docs/results.md) · [q3 优化](docs/optimization.md) · [复现指南](docs/reproduction.md) · [Windows 演练](docs/simulator.md)
 
 | 当前交付 | 已验证范围 |
 | :--- | :--- |

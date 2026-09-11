@@ -32,6 +32,11 @@ def main():
     parser.add_argument(
         "--output-dir", type=Path, help="new private output directory; must not already exist"
     )
+    parser.add_argument(
+        "--strategy",
+        choices=["adaptive", "adaptive_p90", "adaptive_q25", "adaptive_median"],
+        help="q3 defaults to adaptive_q25; q4 defaults to adaptive",
+    )
     args = parser.parse_args()
     if not args.robot_id or not args.practice_ready:
         parser.error("supply robot ID and --practice-ready after checking the simulator UI")
@@ -58,7 +63,11 @@ def main():
     client = RobotClient(
         HttpTransport(args.base_url), args.robot_id, log_path=out / "actions.jsonl"
     )
-    policy = CoveragePolicy(client, args.question, coverage=args.coverage)
+    strategy = args.strategy or ("adaptive_q25" if args.question == 3 else "adaptive")
+    weight = 0.04 if strategy == "adaptive_q25" else 0.02
+    policy = CoveragePolicy(
+        client, args.question, strategy=strategy, travel_weight=weight, coverage=args.coverage
+    )
     result = policy.run()
     result["scenario_origin"] = "official_practice_user_selected_not_api_verified"
     result["total_sources"] = None

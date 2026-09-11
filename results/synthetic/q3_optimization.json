@@ -1,0 +1,16 @@
+{
+  "scenario_origin": "local_synthetic_not_official",
+  "seeds": 50,
+  "baseline": "adaptive",
+  "candidate": "adaptive_q25",
+  "travel_weights": {
+    "adaptive": 0.02,
+    "adaptive_q25": 0.04
+  },
+  "baseline_s_per_source": 417.72123076351477,
+  "candidate_s_per_source": 351.33720089150876,
+  "mean_reduction_percent": 15.891945389193808,
+  "wins": 50,
+  "all_complete": true,
+  "interpretation": "candidate improves this fixed synthetic seed set only; no official score claim"
+}
