@@ -226,3 +226,13 @@ def test_complete_synthetic_case(question):
         + 2 * result["cleared"],
         abs=1e-5,
     )
+
+
+def test_dynamic_q10_strategy_is_certificate_safe():
+    sources = generate_sources(20261011, question=3, count=10)
+    arena = SyntheticArena(sources, seed=20261011)
+    result = CoveragePolicy(
+        RobotClient(arena.process), question=3, strategy="adaptive_q10_dynamic", travel_weight=0.02
+    ).run()
+    assert result["completion_certificate"] and result["exit_ok"]
+    assert result["fallback_actions"] == 0

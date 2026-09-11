@@ -34,7 +34,16 @@ def main():
     )
     parser.add_argument(
         "--strategy",
-        choices=["adaptive", "adaptive_p90", "adaptive_q25", "adaptive_median"],
+        choices=[
+            "adaptive",
+            "adaptive_p90",
+            "adaptive_q10",
+            "adaptive_q10_dynamic",
+            "adaptive_q10_dynamic_fine",
+            "adaptive_q25",
+            "adaptive_q25_fine",
+            "adaptive_median",
+        ],
         help="q3 defaults to adaptive_q25; q4 defaults to adaptive",
     )
     args = parser.parse_args()
@@ -64,7 +73,9 @@ def main():
         HttpTransport(args.base_url), args.robot_id, log_path=out / "actions.jsonl"
     )
     strategy = args.strategy or ("adaptive_q25" if args.question == 3 else "adaptive")
-    weight = 0.04 if strategy == "adaptive_q25" else 0.02
+    weight = 0.04 if strategy in {"adaptive_q25", "adaptive_q25_fine"} else 0.02
+    if strategy == "adaptive_q10_dynamic":
+        weight = 0.02
     policy = CoveragePolicy(
         client, args.question, strategy=strategy, travel_weight=weight, coverage=args.coverage
     )

@@ -5,7 +5,7 @@
 独立质检在不访问模拟器、不操作 UI 的条件下完成：
 
 - geometry、policy、protocol、synthetic 四个核心模块的 AST 及合法案例行为与归档版本保持一致；
-- 15 项 pytest、q3/q4 各一局 smoke、CLI 帮助和缺少人工确认时的网络保护通过；
+- 17 项 pytest、q3/q4 各一局 smoke、CLI 帮助和缺少人工确认时的网络保护通过；
 - practice 入口记录包内 7 个源码 SHA-256，重复输出目录会拒绝覆盖；
 - 新增 `benchmark --cases 0` 在写文件前拒绝，合法正数案例计算不变。
 

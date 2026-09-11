@@ -261,8 +261,12 @@ class Belief:
         )
 
 
-def candidate_points(belief, current, travel_weight=0.02, objective="worst"):
+def candidate_points(
+    belief, current, travel_weight=0.02, objective="worst", angle_step=22.5
+):
     """Conservative reception filtering; deterministic geometry/travel ranking."""
+    if not (0 < angle_step <= 90):
+        raise ValueError("angle_step must be in (0, 90]")
     poly = belief.polygon
     c, rad = enclosing_circle(poly)
     if not belief.observations:
@@ -270,7 +274,7 @@ def candidate_points(belief, current, travel_weight=0.02, objective="worst"):
     frame = belief.observations[0][1]
     candidates = [c]
     for radius in (40.0, 80.0, 160.0, 320.0, 500.0, 650.0):
-        for ang in np.arange(0, 360, 22.5) + frame:
+        for ang in np.arange(0, 360, angle_step) + frame:
             candidates.append(c + radius * unit(ang))
     old = np.array([p for p, t in belief.observations])
     scenarios = np.vstack((poly, (poly + np.roll(poly, -1, axis=0)) / 2, c))
@@ -332,7 +336,7 @@ def candidate_points(belief, current, travel_weight=0.02, objective="worst"):
                 objective
             )
             if geometric is None:
-                raise ValueError("objective must be worst, p90, or median")
+                raise ValueError("objective must be worst, p90, q25, q10, or median")
             results.append(
                 {
                     "position": q,

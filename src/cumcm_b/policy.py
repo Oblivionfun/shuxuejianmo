@@ -74,13 +74,19 @@ class CoveragePolicy:
         travel_weight=0.02,
         max_active=6,
         coverage="triangular",
+        dynamic_first_weight=0.50,
+        dynamic_later_weight=0.02,
+        candidate_angle_step=22.5,
     ):
         if strategy not in (
             "adaptive",
             "fixed",
             "adaptive_p90",
             "adaptive_q10",
+            "adaptive_q10_dynamic",
+            "adaptive_q10_dynamic_fine",
             "adaptive_q25",
+            "adaptive_q25_fine",
             "adaptive_median",
         ):
             raise ValueError("unknown strategy")
@@ -90,6 +96,9 @@ class CoveragePolicy:
         self.coverage = "seven" if question == 3 else coverage
         self.travel_weight = travel_weight
         self.max_active = max_active
+        self.dynamic_first_weight = float(dynamic_first_weight)
+        self.dynamic_later_weight = float(dynamic_later_weight)
+        self.candidate_angle_step = float(candidate_angle_step)
         self.tracks = {k: Track() for k in range(1, 21)}
         self.visited = []
         self.fallback_actions = 0
@@ -139,12 +148,35 @@ class CoveragePolicy:
                 "adaptive": "worst",
                 "adaptive_p90": "p90",
                 "adaptive_q25": "q25",
+                "adaptive_q25_fine": "q25",
                 "adaptive_q10": "q10",
+                "adaptive_q10_dynamic": "q10",
+                "adaptive_q10_dynamic_fine": "q10",
                 "adaptive_median": "median",
                 "fixed": "worst",
             }[self.strategy]
+            # The first active query is a coarse acquisition step: avoid a long
+            # detour before the bearing history has narrowed the feasible set.
+            # Once one or more active bearings exist, information gain dominates
+            # because the next query is evaluated inside an already localised
+            # cone.  This keeps the policy feedback-only and certificate-safe.
+            travel_weight = self.travel_weight
+            if self.strategy == "adaptive_q10_dynamic":
+                travel_weight = (
+                    self.dynamic_first_weight
+                    if len(track.belief.observations) <= 1
+                    else self.dynamic_later_weight
+                )
             candidates = candidate_points(
-                track.belief, self.client.position, self.travel_weight, objective=objective
+                track.belief,
+                self.client.position,
+                travel_weight,
+                objective=objective,
+                angle_step=(
+                    11.25
+                    if self.strategy in {"adaptive_q25_fine", "adaptive_q10_dynamic_fine"}
+                    else self.candidate_angle_step
+                ),
             )
             choices = [
                 row
