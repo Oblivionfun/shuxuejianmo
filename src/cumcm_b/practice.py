@@ -12,7 +12,8 @@ import time
 from cumcm_b.protocol import HttpTransport, RobotClient
 from cumcm_b.policy import CoveragePolicy
 
-LATEST_Q3_STRATEGY = "adaptive_q25"
+LATEST_Q3_STRATEGY = "adaptive_q10_dynamic"
+LATEST_Q4_STRATEGY = "q4_joint"
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
     parser.add_argument("--question", type=int, choices=[3, 4], required=True)
     parser.add_argument(
         "--coverage",
-        choices=["triangular", "square"],
+        choices=["triangular", "triangular_legacy", "square"],
         default="triangular",
         help="question 4 coverage; question 3 always uses seven stations",
     )
@@ -45,14 +46,19 @@ def main():
             "adaptive_q25",
             "adaptive_q25_fine",
             "adaptive_median",
+            "q4_joint",
         ],
-        help="q3 latest stable default is adaptive_q25; q4 defaults to adaptive",
+        help="q3 defaults to adaptive_q10_dynamic; q4 defaults to q4_joint",
     )
     args = parser.parse_args()
     if not args.robot_id or not args.practice_ready:
         parser.error("supply robot ID and --practice-ready after checking the simulator UI")
     out = args.output_dir or Path(".local/practice") / time.strftime("%Y%m%d-%H%M%S")
     out.mkdir(parents=True, exist_ok=False)
+    strategy = args.strategy or (LATEST_Q3_STRATEGY if args.question == 3 else LATEST_Q4_STRATEGY)
+    weight = 0.04 if strategy in {"adaptive_q25", "adaptive_q25_fine", "q4_joint"} else 0.02
+    if strategy == "adaptive_q10_dynamic":
+        weight = 0.02
     root = Path(__file__).resolve().parent
     sources = sorted(root.glob("*.py"))
     snapshot = {
@@ -63,6 +69,10 @@ def main():
         },
         "question": args.question,
         "coverage": args.coverage if args.question == 4 else "seven",
+        "strategy": strategy,
+        "travel_weight": weight,
+        "known_measure_budget": 4 if strategy == "q4_joint" else None,
+        "localize_threshold_m": 300.0 if strategy == "q4_joint" else None,
         "practice_ready_is_manual_confirmation": True,
         "sha256": {
             str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources
@@ -74,12 +84,14 @@ def main():
     client = RobotClient(
         HttpTransport(args.base_url), args.robot_id, log_path=out / "actions.jsonl"
     )
-    strategy = args.strategy or (LATEST_Q3_STRATEGY if args.question == 3 else "adaptive")
-    weight = 0.04 if strategy in {"adaptive_q25", "adaptive_q25_fine"} else 0.02
-    if strategy == "adaptive_q10_dynamic":
-        weight = 0.02
     policy = CoveragePolicy(
-        client, args.question, strategy=strategy, travel_weight=weight, coverage=args.coverage
+        client,
+        args.question,
+        strategy=strategy,
+        travel_weight=weight,
+        coverage=args.coverage,
+        known_measure_budget=4,
+        localize_threshold_m=300.0,
     )
     result = policy.run()
     result["scenario_origin"] = "official_practice_user_selected_not_api_verified"

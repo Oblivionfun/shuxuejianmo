@@ -2,7 +2,7 @@
 
 ## 项目范围
 
-- 本项目服务于全国大学生数学建模竞赛（CUMCM）2026 B 题，当前重点是问题 3 的建模、算法优化、演练验证和论文材料整理。
+- 本项目服务于全国大学生数学建模竞赛（CUMCM）2026 B 题，当前重点是问题 3、问题 4 的建模、算法优化、演练验证和论文材料整理。
 - 所有结论必须能追溯到题目、代码、输入数据或实际运行日志。合成数据、固定随机种子和本地仿真结果必须明确标注为“本地验证”，不能写成官方成绩。
 - 论文、图表和摘要只能使用已经实际运行并保存的结果；未知信息写明“待核验”，不得补造。
 
@@ -51,20 +51,21 @@ py -3.12 run_practice.py --help
 $env:CUMCM_ROBOT_ID = "当前演练对应的robot_id"
 ```
 
-问题 3 的候选策略示例：
+问题 3 和问题 4 的候选策略示例：
 
 ```powershell
 py -3.12 run_practice.py --question 3 --strategy adaptive_q25 --practice-ready --output-dir .local\practice\q3_q25_YYYYMMDD-HHMM
 py -3.12 run_practice.py --question 3 --strategy adaptive_q10_dynamic --practice-ready --output-dir .local\practice\q3_dynamic_YYYYMMDD-HHMM
+py -3.12 run_practice.py --question 4 --strategy q4_joint --coverage triangular --practice-ready --output-dir .local\practice\q4_joint_YYYYMMDD-HHMM
 ```
 
-`--output-dir` 必须是不存在的新目录。问题 3 使用自动七站流程；问题 4 如需演练，显式选择 `--coverage triangular` 或 `--coverage square`。
+`--output-dir` 必须是不存在的新目录。问题 3 使用自动七站流程；问题 4 默认主线是 `q4_joint` + `triangular`，历史 28 站构造用 `triangular_legacy`，方格基线用 `square`。
 
 ## 结果判读与报告
 
 - 一局演练只有在 `completion_certificate: true` 且 `exit_ok: true` 时才算完整结束；否则按失败、超时或未确认处理。
 - 重点检查 `virtual_time_s`、`mean_clear_time_s`、`cleared`、`measurements`、`distance_m` 和 `fallback_actions`，同时保留逐动作日志。
-- 当前完整策略组中，`adaptive_q10_dynamic` 在 3 局官方演练记录的总虚拟时间最低，但平均清除数较少、合并单源时间高于 `adaptive_q25`；它是官方验证的研究对照，不能据此宣称正式平均时间或奖项水平。历史官方演练数据属于早期策略，只能作为背景对照。
+- q3 策略选型以 50 个共同源配置的本地配对实验为准，当前入口是 `adaptive_q10_dynamic`；官方 25 局策略组只用于协议、证书和日志完整性核验。q4 当前入口是 `q4_joint`，50 局本地配对平均 717.04 秒/源、46/50 局优于新基线。所有这些都是本地或官方演练证据，不能宣称正式平均时间或奖项水平。
 - 任何官方演练结果都应记录会话标识、题号、策略、参数、时间戳和输出目录；不记录账号密码。
 
 ## 代码、验证与 Git

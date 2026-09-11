@@ -138,9 +138,21 @@ def main():
         for i in range(1 if args.smoke else args.cases):
             seed = 20260911 + i
             for strategy in ["adaptive"] if args.smoke else ["fixed", "adaptive"]:
+                # Keep the published 106-run table reproducible.  The current
+                # 26-station q4 policy is benchmarked separately by
+                # scripts/benchmark_q4_optimization.py.
+                coverage = "triangular_legacy" if question == 4 else "triangular"
                 row, trace = run_case(
-                    seed, question, strategy, trace=(i == 0 and strategy == "adaptive")
+                    seed,
+                    question,
+                    strategy,
+                    trace=(i == 0 and strategy == "adaptive"),
+                    coverage=coverage,
                 )
+                # Keep the historical table's public label stable while the
+                # actual q4 run uses the legacy 950 m geometry above.
+                if question == 4:
+                    row["coverage"] = "triangular"
                 results.append(row)
                 print(json.dumps(row), flush=True)
                 if trace:
@@ -153,7 +165,12 @@ def main():
                 ("outward_boundary", "negative"),
                 (None, "spatial"),
             ]:
-                row, trace = run_case(909, question, "adaptive", stress, mode, trace=False)
+                coverage = "triangular_legacy" if question == 4 else "triangular"
+                row, trace = run_case(
+                    909, question, "adaptive", stress, mode, trace=False, coverage=coverage
+                )
+                if question == 4:
+                    row["coverage"] = "triangular"
                 results.append(row)
                 print(json.dumps(row), flush=True)
     df = pd.DataFrame(results)

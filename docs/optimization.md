@@ -45,32 +45,21 @@ python scripts/benchmark_q3_optimization.py --seeds 50 --out .local/q3-optimizat
 
 ## 当前版本选择
 
-完整 Windows 官方演练策略组汇总见 [`q3_official_strategy_summary_20260911.csv`](../results/practice/q3_official_strategy_summary_20260911.csv)，说明见 [`q3_official_practice_report_20260911.md`](../reports/q3_official_practice_report_20260911.md)。共有 25 局带 `summary.json` 的完整记录，另有 3 个目录缺少汇总文件，不纳入有效成绩。所有纳入策略均为 100% 完整退出、0 兜底动作，但样本量小且隐藏场景不同，只用于策略筛选。
+完整 Windows 官方策略组汇总见 [`q3_official_strategy_summary_20260911.csv`](../results/practice/q3_official_strategy_summary_20260911.csv)，说明见 [`q3_official_practice_report_20260911.md`](../reports/q3_official_practice_report_20260911.md)。25 局记录全部完整退出，另有 3 个目录缺少 `summary.json`。由于不同策略没有使用共同隐藏场景，且源数量 N 在 10–16 间变化，官方演练只能验证协议、证书和日志，不能承担策略排序。
 
-关键比较如下：
+当前选型回到同源配对的本地合成实验。`scripts/benchmark_q3_strategies.py` 在 50 个相同种子上比较，完整逐局结果见 [`q3_strategy_comparison/runs.csv`](../results/synthetic/q3_strategy_comparison/runs.csv)，摘要见 [`q3_strategy_comparison/summary.json`](../results/synthetic/q3_strategy_comparison/summary.json)。所有策略均完整且无兜底：
 
-| 策略 | 有效局数 | 平均虚拟时间 (s) | 平均清除数 | 合并单源时间 (s/源) | 平均距离 (m) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `adaptive_q25` | 4 | 4472.55 | 14.75 | **303.224** | 19134.02 |
-| `adaptive_median` | 3 | 4663.85 | 14.33 | 325.385 | 20109.23 |
-| `adaptive_p90` | 3 | 5180.13 | 15.33 | 337.835 | 22750.65 |
-| `adaptive_q10_dynamic` | 3 | **4072.43** | 11.67 | 349.065 | **16932.14** |
-| `adaptive_q10` | 3 | 5032.19 | 14.00 | 359.442 | 21535.95 |
-| `adaptive_q25_fine` | 3 | 4555.87 | 11.67 | 390.503 | 19174.35 |
-| `adaptive_q10_dynamic_fine` | 3 | 4613.44 | 12.67 | 364.219 | 19428.87 |
-| `adaptive` | 3 | 5551.15 | 14.00 | 396.511 | 24815.76 |
+| 策略 | 平均秒/源 | 相对 `adaptive` | 胜局 |
+| --- | ---: | ---: | ---: |
+| `adaptive_q10_dynamic` | **333.75** | **−20.10%** | 50/50 |
+| `adaptive_q25` | 351.34 | −15.89% | 50/50 |
+| `adaptive_q10` | 356.07 | −14.76% | 50/50 |
+| `adaptive` | 417.72 | — | — |
 
-总虚拟时间不能脱离清除数比较：动态 q10 的平均总时间最低，但平均清除数只有 11.67；q25 的平均清除数为 14.75，按所有有效局的总时间除以总清除数后仍最低。因此当前最新稳定方案仍然选择 `adaptive_q25`，而不是根据总时间单指标切换到动态 q10。
+因此当前 q3 入口改为 `adaptive_q10_dynamic`：首次主动点提高移动惩罚，后续测量再追求 q10 信息增益；MEC ≤19.75 m 才允许清除的证书和光学兜底不变。官方 25 局中 q25 的原始单源均值较低，主要受各组 N 分布和覆盖固定开销混淆，不能推翻同源配对结论。
 
-当前代码主线固定为：
-
-1. **q3 最新稳定入口：`adaptive_q25`**。它使用 q25 候选误差、固定移动权重 0.04 和同一 MEC 半径 ≤19.75 m 的保守清除证书；它在完整官方策略组中取得最低合并单源时间，并有最多的有效局数之一。
-2. **官方验证的研究对照：`adaptive_q10_dynamic`**。它在 3/3 局完整退出，平均总虚拟时间最低、移动距离最低，但清除数较少，合并单源时间没有超过 q25。因此继续保留为显式对照，不切换默认入口。
-3. **细角度策略不进入主线**。`adaptive_q25_fine` 和 `adaptive_q10_dynamic_fine` 在官方批次中没有显示出稳定收益，额外测量成本抵消了候选点细化带来的局部几何收益。
-4. **安全边界保持不变**。不以 FIM 或概率模型替代有界误差几何证书，不把总虚拟时间单指标当作策略优劣，也不把本地或小样本均值写成正式成绩。
+细角度、概率栅格和 q25 动态组合保留为消融，不进入入口。安全边界保持不变：不以 FIM 或概率模型替代有界误差几何证书，也不把本地均值写成正式成绩。
 
 贝叶斯占据栅格、覆盖站一阶前瞻和目标 TSP/2-opt 的独立消融均未优于 q25，详见 [`optimization_belief_grid.md`](optimization_belief_grid.md) 与脚本；这些负结果说明继续堆叠复杂全局优化并不能自动降低移动距离。
 
-下一步优先补齐 `adaptive_q10_dynamic` 缺少汇总的 `g02` 记录，并继续记录页面源总数；若后续动态 q10 在清除数可比的条件下仍能把合并单源时间稳定压到 q25 以下，再考虑切换默认入口。任何新批次继续报告完整率、移动距离、测量次数、换频次数和兜底次数。
-
-当前 q3 官方演练入口默认使用 `adaptive_q25`，q4 仍默认 `adaptive`；连接前仍需人工确认模拟器界面为演练。正式测试和论文结论不会自动由此实验填充。
+任何新批次继续报告完整率、移动距离、测量次数、换频次数和兜底次数，并优先使用同一批源配置进行策略对照。q4 当前优化方案见 [q4 优化与联合巡回](q4_optimization.md)。

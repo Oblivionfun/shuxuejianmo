@@ -33,9 +33,9 @@ $env:CUMCM_ROBOT_ID = "当前演练对应的 robot_id"
 python run_practice.py --question 4 --coverage triangular --practice-ready
 ```
 
-问题 3 使用 `--question 3`（自动七站）；q4 方格基线使用 `--coverage square`。`--practice-ready` 只是人工确认记录。四动作 API 不提供模式查询，客户端无法靠参数辨别演练和正式会话；当前授权范围为演练，禁止启动或连接正式测试。客户端没有启动新会话接口。
+问题 3 使用 `--question 3`（默认 `adaptive_q10_dynamic` 和七站）；q4 默认使用 `q4_joint` 与 26 站三角覆盖，方格基线使用 `--coverage square`，历史三角构造使用 `--coverage triangular_legacy`。`--practice-ready` 只是人工确认记录。四动作 API 不提供模式查询，客户端无法靠参数辨别演练和正式会话；当前授权范围为演练，禁止启动或连接正式测试。客户端没有启动新会话接口。
 
-问题 3 不显式传 `--strategy` 时使用当前主线 `adaptive_q25`；如需复现实验对照，必须明确传入 `--strategy adaptive_q10_dynamic`，并为它新开一局演练。策略之间不要在同一会话中切换。
+问题 3 如需复现实验对照，必须明确传入具体 `--strategy`，并为每个策略新开一局演练。策略之间不要在同一会话中切换。
 
 每局默认写入 `.local/practice/<时间>/` 的 `provenance.json`、`summary.json` 和 `actions.jsonl`，也可用 `--output-dir` 指定不存在的目录。退出码 0 只有在完成证书和 `/exit` 均成功时返回。超时仅重试相同请求 ID 与字节；状态无法确认时记录 `unresolved` 并停止后续动作。
 

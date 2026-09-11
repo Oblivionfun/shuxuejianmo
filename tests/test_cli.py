@@ -30,6 +30,7 @@ def test_practice_requires_id_and_manual_confirmation(monkeypatch, tmp_path, ext
 
 def test_practice_records_installed_sources_without_network(monkeypatch, tmp_path):
     output = tmp_path / "private-run"
+    captured = {}
     monkeypatch.setattr(
         sys,
         "argv",
@@ -49,13 +50,14 @@ def test_practice_records_installed_sources_without_network(monkeypatch, tmp_pat
 
     class FakePolicy:
         def __init__(self, *args, **kwargs):
-            pass
+            captured.update(kwargs)
 
         def run(self):
             return {"completion_certificate": True, "exit_ok": True, "cleared": 12}
 
     monkeypatch.setattr(practice, "CoveragePolicy", FakePolicy)
     assert practice.main() == 0
+    assert captured["strategy"] == "q4_joint"
     provenance = json.loads((output / "provenance.json").read_text(encoding="utf-8"))
     package = Path(practice.__file__).parent
     assert set(provenance["sha256"]) == {p.name for p in package.glob("*.py")}
@@ -67,3 +69,35 @@ def test_practice_records_installed_sources_without_network(monkeypatch, tmp_pat
     assert summary["scenario_origin"] == "official_practice_user_selected_not_api_verified"
     with pytest.raises(FileExistsError):
         practice.main()
+
+
+def test_practice_uses_dynamic_q10_for_q3_by_default(monkeypatch, tmp_path):
+    output = tmp_path / "q3-run"
+    captured = {}
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "practice",
+            "--question",
+            "3",
+            "--robot-id",
+            "example",
+            "--practice-ready",
+            "--output-dir",
+            str(output),
+        ],
+    )
+    monkeypatch.setattr(practice, "HttpTransport", lambda *args: object())
+    monkeypatch.setattr(practice, "RobotClient", lambda *args, **kwargs: object())
+
+    class FakePolicy:
+        def __init__(self, *args, **kwargs):
+            captured.update(kwargs)
+
+        def run(self):
+            return {"completion_certificate": True, "exit_ok": True, "cleared": 10}
+
+    monkeypatch.setattr(practice, "CoveragePolicy", FakePolicy)
+    assert practice.main() == 0
+    assert captured["strategy"] == "adaptive_q10_dynamic"

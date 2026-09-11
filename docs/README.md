@@ -8,6 +8,7 @@
 | 推导、假设、保证与失败条件 | [模型与证明](model.md)、[术语表](glossary.md) |
 | 数值结果及结论边界 | [实验结论](results.md) |
 | q3 优化路线与文献借鉴 | [优化讨论](optimization.md) |
+| q4 覆盖构造与联合巡回 | [q4 优化记录](q4_optimization.md) |
 | 安装、复现实验、图形生成 | [复现指南](reproduction.md) |
 | Windows / Parallels 演练 | [模拟器说明](simulator.md) |
 | 验证范围 | [验证记录](verification.md) |

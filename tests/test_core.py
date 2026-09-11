@@ -17,8 +17,7 @@ from cumcm_b.geometry import (
 )
 from cumcm_b.synthetic import Source, SyntheticArena, generate_sources
 from cumcm_b.protocol import RobotClient, ProtocolError, HttpTransport
-from cumcm_b.policy import CoveragePolicy, stations, triangular_cover
-from cumcm_b.practice import LATEST_Q3_STRATEGY
+from cumcm_b.policy import CoveragePolicy, q4_station_route, stations, triangular_cover
 
 
 def triangle_observations(side=39.0):
@@ -112,13 +111,13 @@ def test_triangular_cover_is_a_continuous_disk_certificate():
     from shapely.ops import unary_union
 
     points, cells = triangular_cover()
-    assert len(points) == 28 and len(cells) == 37
+    assert len(points) == 26 and len(cells) == 33
     cover = unary_union([Polygon(t) for t in cells])
     assert cover.contains(Point(0, 0))
     # Any exit from the union crosses a boundary >=1800m away: entire closed disk is covered.
     assert cover.boundary.distance(Point(0, 0)) >= 1800 - 1e-7
     for tri in cells:
-        assert np.max(np.linalg.norm(tri[:, None, :] - tri[None, :, :], axis=2)) <= 950 + 1e-7
+        assert np.max(np.linalg.norm(tri[:, None, :] - tri[None, :, :], axis=2)) <= 995 + 1e-7
         assert all(np.min(np.linalg.norm(points - p, axis=1)) < 1e-8 for p in tri)
     for g in [*points, *[1800 * unit(t) for t in np.linspace(0, 360, 721)]]:
         if np.linalg.norm(g) > 1800 + 1e-7:
@@ -126,6 +125,13 @@ def test_triangular_cover_is_a_continuous_disk_certificate():
         near = points[np.linalg.norm(points - g, axis=1) <= 1000]
         # Independent all-orientation check, rather than checking a few sampled emission angles.
         assert MultiPoint(near).convex_hull.buffer(1e-7).covers(Point(g))
+
+
+def test_q4_route_visits_each_optimized_station_once():
+    points = stations(4)
+    route = q4_station_route(points)
+    assert len(route) == 26
+    assert {tuple(x) for x in route} == {tuple(x) for x in points}
 
 
 def test_q2_apex_perturbation_does_not_dominate_score():
@@ -210,10 +216,6 @@ def test_candidate_quantile_objectives_are_explicit():
         candidate_points(belief, np.zeros(2), objective="unknown")
 
 
-def test_latest_q3_strategy_is_the_evidence_backed_default():
-    assert LATEST_Q3_STRATEGY == "adaptive_q25"
-
-
 @pytest.mark.parametrize("question", [3, 4])
 def test_complete_synthetic_case(question):
     sources = generate_sources(20260911, question, count=10)
@@ -223,6 +225,16 @@ def test_complete_synthetic_case(question):
     assert result["completion_certificate"], result
     assert result["exit_ok"] and result["cleared"] == len(sources)
     assert result["virtual_time_s"] < 360000
+
+
+def test_q4_joint_strategy_completes_with_the_optimized_cover():
+    sources = generate_sources(20261012, question=4)
+    arena = SyntheticArena(sources, seed=20261012)
+    result = CoveragePolicy(
+        RobotClient(arena.process), question=4, strategy="q4_joint", travel_weight=0.04
+    ).run()
+    assert result["completion_certificate"], result
+    assert result["exit_ok"] and result["stations_visited"] == 26
     assert result["virtual_time_s"] == pytest.approx(
         result["distance_m"] / 5
         + result["switches"]

@@ -12,26 +12,61 @@ from .geometry import Belief, candidate_points, enclosing_circle, optical_cover_
 from .protocol import BudgetExpired, ProtocolError
 
 
-@lru_cache(maxsize=1)
-def _triangular_geometry():
-    """Closed-cell construction; distance-to-origin tests the exact circular boundary."""
-    side = 950.0
+Q4_TRIANGLE_SIDE_M = 995.0
+Q4_TRIANGLE_OFFSET = (0.23, 0.90)
+Q4_TRIANGULAR_ROUTE_ORDER = (
+    0,
+    16,
+    17,
+    21,
+    20,
+    15,
+    9,
+    10,
+    11,
+    5,
+    2,
+    1,
+    4,
+    3,
+    8,
+    14,
+    19,
+    23,
+    24,
+    25,
+    22,
+    18,
+    13,
+    12,
+    7,
+    6,
+)
+
+
+@lru_cache(maxsize=4)
+def _triangular_geometry(side=Q4_TRIANGLE_SIDE_M, offset=Q4_TRIANGLE_OFFSET):
+    """Build a closed triangular-cell cover with a conservative disk boundary."""
+    side = float(side)
+    ox, oy = map(float, offset)
 
     def xy(i, j):
         return np.array(
-            [side * (i + 1 / 3 + (j + 1 / 3) / 2), side * math.sqrt(3) / 2 * (j + 1 / 3)]
+            [side * (i + ox + (j + oy) / 2), side * math.sqrt(3) / 2 * (j + oy)]
         )
 
     keys = set()
     cells = []
-    for i in range(-5, 5):
-        for j in range(-5, 5):
+    for i in range(-8, 9):
+        for j in range(-8, 9):
             for ids in (((i, j), (i + 1, j), (i, j + 1)), ((i + 1, j), (i + 1, j + 1), (i, j + 1))):
                 tri = np.array([xy(*ij) for ij in ids])
                 if Polygon(tri).distance(Point(0, 0)) <= 1800 + 1e-8:
                     keys.update(ids)
                     cells.append(tri)
-    ordered = sorted(keys, key=lambda ij: (ij[1], ij[0] if ij[1] % 2 == 0 else -ij[0]))
+    # Lexicographic lattice order is stable across the optimized and legacy
+    # constructions, so the deterministic route indices remain auditable.
+    ordered = sorted(keys)
     return np.vstack((np.zeros(2), [xy(*ij) for ij in ordered])), np.array(cells)
 
 
@@ -40,12 +75,28 @@ def triangular_cover():
     return points.copy(), cells.copy()
 
 
+def legacy_triangular_cover():
+    """Return the former 950 m construction for historical reproduction."""
+    points, cells = _triangular_geometry(950.0, (1 / 3, 1 / 3))
+    return points.copy(), cells.copy()
+
+
+def q4_station_route(points):
+    """Return the deterministic open route used by the optimized triangular q4 policy."""
+    points = np.asarray(points, float)
+    if len(points) == len(Q4_TRIANGULAR_ROUTE_ORDER):
+        return points[list(Q4_TRIANGULAR_ROUTE_ORDER)].copy()
+    return points.copy()
+
+
 def stations(question, coverage="triangular"):
     if question == 3:
         return np.vstack((np.zeros(2), [900 * math.sqrt(3) * unit(t) for t in range(0, 360, 60)]))
     if question == 4:
         if coverage == "triangular":
             return triangular_cover()[0]
+        if coverage == "triangular_legacy":
+            return legacy_triangular_cover()[0]
         if coverage != "square":
             raise ValueError("unknown q4 coverage")
         grid = []
@@ -77,6 +128,8 @@ class CoveragePolicy:
         dynamic_first_weight=0.50,
         dynamic_later_weight=0.02,
         candidate_angle_step=22.5,
+        known_measure_budget=4,
+        localize_threshold_m=300.0,
     ):
         if strategy not in (
             "adaptive",
@@ -88,6 +141,7 @@ class CoveragePolicy:
             "adaptive_q25",
             "adaptive_q25_fine",
             "adaptive_median",
+            "q4_joint",
         ):
             raise ValueError("unknown strategy")
         self.client = client
@@ -99,6 +153,12 @@ class CoveragePolicy:
         self.dynamic_first_weight = float(dynamic_first_weight)
         self.dynamic_later_weight = float(dynamic_later_weight)
         self.candidate_angle_step = float(candidate_angle_step)
+        self.known_measure_budget = int(known_measure_budget)
+        self.localize_threshold_m = float(localize_threshold_m)
+        if self.known_measure_budget < 0:
+            raise ValueError("known_measure_budget must be nonnegative")
+        if self.localize_threshold_m < 0:
+            raise ValueError("localize_threshold_m must be nonnegative")
         self.tracks = {k: Track() for k in range(1, 21)}
         self.visited = []
         self.fallback_actions = 0
@@ -153,6 +213,7 @@ class CoveragePolicy:
                 "adaptive_q10_dynamic": "q10",
                 "adaptive_q10_dynamic_fine": "q10",
                 "adaptive_median": "median",
+                "q4_joint": "worst",
                 "fixed": "worst",
             }[self.strategy]
             # The first active query is a coarse acquisition step: avoid a long
@@ -209,10 +270,39 @@ class CoveragePolicy:
                 return
         raise ProtocolError("exhausted certified optical cover without success")
 
+    def _station_channels(self):
+        """Choose feedback queries without weakening the q4 coverage certificate."""
+        if self.strategy != "q4_joint":
+            return [k for k, t in self.tracks.items() if not t.cleared]
+        unseen = [k for k, t in self.tracks.items() if not t.seen and not t.cleared]
+        known = [k for k, t in self.tracks.items() if t.seen and not t.cleared]
+        known.sort(key=lambda k: -enclosing_circle(self.tracks[k].belief.polygon)[1])
+        return unseen + known[: self.known_measure_budget]
+
+    def _localize_nearby(self):
+        """Clear a discovered target when its certified center is near the route."""
+        if self.strategy != "q4_joint":
+            return
+        while True:
+            candidates = []
+            for k, track in self.tracks.items():
+                if not track.seen or track.cleared:
+                    continue
+                center, _ = enclosing_circle(track.belief.polygon)
+                distance = float(np.linalg.norm(center - self.client.position))
+                if distance <= self.localize_threshold_m:
+                    candidates.append((distance, k))
+            if not candidates:
+                return
+            _, channel = min(candidates)
+            self.localize(channel)
+
     def run(self):
         started = time.monotonic()
         self.client.action("/enter")
         points = stations(self.question, self.coverage)
+        if self.strategy == "q4_joint" and self.question == 4 and self.coverage == "triangular":
+            points = q4_station_route(points)
         pending = list(range(len(points)))
         complete = False
         reason = "not_started"
@@ -220,13 +310,13 @@ class CoveragePolicy:
             while pending:
                 index = (
                     pending[0]
-                    if self.strategy == "fixed"
+                    if self.strategy in {"fixed", "q4_joint"}
                     else min(
                         pending, key=lambda i: np.linalg.norm(points[i] - self.client.position)
                     )
                 )
                 p = points[index]
-                channels = [k for k, t in self.tracks.items() if not t.cleared]
+                channels = self._station_channels()
                 if self.client.channel in channels:
                     channels.remove(self.client.channel)
                     channels.insert(0, self.client.channel)
@@ -240,6 +330,28 @@ class CoveragePolicy:
                     break
                 self.visited.append(index)
                 pending.remove(index)
+                self._localize_nearby()
+                if self.client.metrics["cleared"] == 16:
+                    complete = True
+                    reason = "upper_bound_16"
+                    break
+                if self.strategy != "q4_joint":
+                    known = [k for k, t in self.tracks.items() if t.seen and not t.cleared]
+                    while known:
+                        k = min(
+                            known,
+                            key=lambda kk: np.linalg.norm(
+                                enclosing_circle(self.tracks[kk].belief.polygon)[0]
+                                - self.client.position
+                            ),
+                        )
+                        self.localize(k)
+                        known.remove(k)
+                if self.client.metrics["cleared"] == 16:
+                    complete = True
+                    reason = "upper_bound_16"
+                    break
+            if self.strategy == "q4_joint":
                 known = [k for k, t in self.tracks.items() if t.seen and not t.cleared]
                 while known:
                     k = min(
@@ -251,10 +363,6 @@ class CoveragePolicy:
                     )
                     self.localize(k)
                     known.remove(k)
-                if self.client.metrics["cleared"] == 16:
-                    complete = True
-                    reason = "upper_bound_16"
-                    break
             if not pending and all(not t.seen or t.cleared for t in self.tracks.values()):
                 complete = True
                 reason = "coverage_and_clearing"

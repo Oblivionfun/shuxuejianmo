@@ -20,6 +20,18 @@ $$T=L/5+N_{\mathrm{switch}}+5N_{\mathrm{measure}}+3N_{\mathrm{clear\ attempt}}+2
 
 主表 86 行包含 80 个常规运行和 6 个压力运行；覆盖表 40 行，其中 20 行复用三角结果并新增 20 个方格运行，因此独立运行总数为 **106**。全部运行完成、清除比例为 100%。下降比例是 `1 − 改进均值 / 基线均值`，不是逐局下降比例的均值。
 
+## q4 最新联合巡回配对实验
+
+最新脚本 [`benchmark_q4_optimization.py`](../scripts/benchmark_q4_optimization.py) 在 50 个共同源配置上配对比较旧 28 站基线、新 26 站局部基线和 `q4_joint`。结果文件见 [`q4_optimization/runs.csv`](../results/synthetic/q4_optimization/runs.csv) 与 [`q4_optimization/summary.json`](../results/synthetic/q4_optimization/summary.json)。
+
+| 方案 | 平均秒/源 | 平均总虚拟秒 | 平均距离 (m) | 平均兜底动作 |
+| :--- | ---: | ---: | ---: | ---: |
+| 旧 28 站 + `adaptive` | 889.50 | 11642.97 | 48464.83 | 60.18 |
+| 新 26 站 + `adaptive` | 889.65 | 11566.29 | 48374.14 | 60.62 |
+| 新 26 站 + `q4_joint` | **717.04** | **9385.33** | **35856.45** | **18.36** |
+
+三种方案的 150 局均完成覆盖证书、全部清除并正常退出；`q4_joint` 在 50 局中有 46 局优于新基线，平均降低 19.40%。这些是本地合成配对证据，不是官方成绩。
+
 ## 官方演练：7 局，92/92 清除
 
 来源：[匿名逐局汇总](../results/practice/summary.csv)。
@@ -40,7 +52,9 @@ $$T=L/5+N_{\mathrm{switch}}+5N_{\mathrm{measure}}+3N_{\mathrm{clear\ attempt}}+2
 
 完整策略组汇总见 [`q3_official_strategy_summary_20260911.csv`](../results/practice/q3_official_strategy_summary_20260911.csv)，测评说明见 [`q3_official_practice_report_20260911.md`](../reports/q3_official_practice_report_20260911.md)。25 局带有 `summary.json` 的记录均满足完整证书和正常退出，另有 3 个目录缺少汇总文件，未计入有效样本。所有策略均为 0 兜底动作。
 
-按合并单源时间，`adaptive_q25` 最低，为 **303.224 s/源**（4 局、平均清除 14.75 个）；`adaptive_median` 为 325.385 s/源；`adaptive_q10_dynamic` 虽然平均总虚拟时间最低（4072.43 s），但平均清除数只有 11.67 个，合并单源时间为 349.065 s/源。因此当前 q3 默认仍为 `adaptive_q25`，动态 q10 作为研究对照。
+按原始合并单源时间，`adaptive_q25` 最低，但不同策略没有共同隐藏场景，且源数量 N 与固定覆盖开销混淆了秒/源指标。因此官方批次不再承担 q3 策略排序；入口选择回到 50 个共同源配置的本地配对实验，当前默认是 `adaptive_q10_dynamic`。
+
+配对实验逐局结果见 [`q3_strategy_comparison/runs.csv`](../results/synthetic/q3_strategy_comparison/runs.csv)，摘要见 [`q3_strategy_comparison/summary.json`](../results/synthetic/q3_strategy_comparison/summary.json)：`adaptive_q10_dynamic` 平均 333.75 秒/源，50/50 胜出基线 `adaptive`，但仍只代表固定本地场景集合。
 
 所有记录的 `scenario_origin` 都表示“用户在模拟器中选择演练、客户端未通过 API 验证模式”。这些数据是官方演练案例证据，不是正式成绩；原始逐动作日志包含机器人标识，只保留在共享工作台，不进入 Git。
 
@@ -48,7 +62,7 @@ $$T=L/5+N_{\mathrm{switch}}+5N_{\mathrm{measure}}+3N_{\mathrm{clear\ attempt}}+2
 
 - q1 的边长 39 m 等边三角形有直径 39 m、最小包围圆半径约 22.5167 m，构成“直径 ≤ 40 m 就能一次清除”的反例。
 - q2 在三个路程权重下考察 6 个距离 × 3 个首次误差 × 3 个第二次误差；有限组合用于核验选点代理，不构成连续空间最优性证明。
-- q3 七站保证全向源距至少一站 ≤ 900 m；q4 三角构造保留 37 个三角形、27 个网格顶点，加原点共 28 站，28 不是已证明的最少站点数。
+- q3 七站保证全向源距至少一站 ≤ 900 m；q4 当前构造使用 33 个闭三角形、25 个网格顶点，加原点共 26 站；历史 28 站构造仍可通过 `triangular_legacy` 复现，26 也不是已证明的最少站点数。
 - 106 个合成运行说明给定场景下的完整性；7 局演练说明这些案例的接口表现。二者都不能映射为奖项、总体成功率或领先其他队伍的比例。
 
 六局跨平台离线反馈重放逐动作一致；一局在约 25 m 等距光学格子发生浮点排序差异，但集合相同，已记录为非阻塞差异。下一步优先优化移动路径和定向源的兜底开销。

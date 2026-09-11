@@ -368,7 +368,7 @@ def main():
         fig,
         "process_q4_coverage",
         "相交闭三角形的顶点提供任意方向覆盖证书。",
-        "triangular_cover 确定性构造：边长950 m，37个三角形，28站",
+        "triangular_cover 确定性构造：边长995 m，33个三角形，26站",
     )
     grid = pd.read_csv(args.results / "coverage_comparison.csv")
     paired = grid.pivot(index="seed", columns="coverage", values="mean_clear_time_s")

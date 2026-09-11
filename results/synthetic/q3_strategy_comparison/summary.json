@@ -1,0 +1,56 @@
+{
+  "scenario_origin": "local_synthetic_not_official",
+  "seeds": 50,
+  "travel_weights": {
+    "adaptive": 0.02,
+    "adaptive_q25": 0.04,
+    "adaptive_q25_fine": 0.04,
+    "adaptive_q10": 0.02,
+    "adaptive_q10_dynamic": 0.02,
+    "adaptive_q10_dynamic_fine": 0.02,
+    "adaptive_q25_dynamic": 0.04,
+    "adaptive_q25_dynamic_fine": 0.04
+  },
+  "mean_s_per_source": {
+    "adaptive_q10_dynamic": 333.75243064811474,
+    "adaptive_q25_dynamic": 338.44429876969684,
+    "adaptive_q25_dynamic_fine": 345.97728036646555,
+    "adaptive_q25_fine": 345.97728036646555,
+    "adaptive_q25": 351.3372008915088,
+    "adaptive_q10_dynamic_fine": 353.3463039250803,
+    "adaptive_q10": 356.06605536947177,
+    "adaptive": 417.72123076351477
+  },
+  "paired_reduction_vs_adaptive_percent": {
+    "adaptive": 0.0,
+    "adaptive_q25": 15.891945389193808,
+    "adaptive_q25_fine": 17.17507876387201,
+    "adaptive_q10": 14.759885505783165,
+    "adaptive_q10_dynamic": 20.101635715743026,
+    "adaptive_q10_dynamic_fine": 15.410977967475914,
+    "adaptive_q25_dynamic": 18.978430147999624,
+    "adaptive_q25_dynamic_fine": 17.17507876387201
+  },
+  "wins_vs_adaptive": {
+    "adaptive": 0,
+    "adaptive_q25": 50,
+    "adaptive_q25_fine": 50,
+    "adaptive_q10": 50,
+    "adaptive_q10_dynamic": 50,
+    "adaptive_q10_dynamic_fine": 50,
+    "adaptive_q25_dynamic": 50,
+    "adaptive_q25_dynamic_fine": 50
+  },
+  "all_complete": true,
+  "fallbacks_by_strategy": {
+    "adaptive": 0,
+    "adaptive_q25": 0,
+    "adaptive_q25_fine": 0,
+    "adaptive_q10": 0,
+    "adaptive_q10_dynamic": 0,
+    "adaptive_q10_dynamic_fine": 0,
+    "adaptive_q25_dynamic": 0,
+    "adaptive_q25_dynamic_fine": 0
+  },
+  "interpretation": "paired synthetic ablation only; no official score claim"
+}
