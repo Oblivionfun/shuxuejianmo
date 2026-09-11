@@ -1,0 +1,33 @@
+{
+  "scenario_origin": "local_synthetic_not_official",
+  "runs": 106,
+  "main_runs": 86,
+  "all_complete": true,
+  "paired_base_results": [
+    {
+      "question": 3,
+      "paired_seeds": 20,
+      "fixed_s_per_source": 431.68492656928686,
+      "adaptive_s_per_source": 413.1022164132216,
+      "mean_reduction_percent": 4.30469284710655,
+      "wins": 14
+    },
+    {
+      "question": 4,
+      "paired_seeds": 20,
+      "fixed_s_per_source": 992.4244274193554,
+      "adaptive_s_per_source": 926.5144663928291,
+      "mean_reduction_percent": 6.641307812012931,
+      "wins": 17
+    }
+  ],
+  "coverage_comparison": {
+    "question": 4,
+    "paired_seeds": 20,
+    "square_s_per_source": 1117.737326529692,
+    "triangular_s_per_source": 926.5144663928291,
+    "mean_reduction_percent": 17.108032057099155,
+    "wins": 20,
+    "strategy": "adaptive"
+  }
+}

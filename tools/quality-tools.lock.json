@@ -1,0 +1,15 @@
+{
+  "repository": "XiaoMaColtAI/math-modeling-skill",
+  "commit": "3527fad922660397834a6167fc2b4c29ee64ba17",
+  "files": {
+    "SKILL.md": "64d8a2dd049cca1837292d5895008137394e5cbc5dfd1a2d715b8dcbeef7bd1e",
+    "VERSION": "64d23f858ef51b0f996e4966d4e27c0371b437e2d2787890b1f7ad22d4ec5663",
+    "references/roles/编程手/scripts/check_env.py": "75164dcfb66828fa7a2c0d8e8fa0e4096f7666c1dc1f7c1c180e2254a3a3dad4",
+    "references/roles/编程手/scripts/figure_audit.py": "878ad540e23691db9b1c5fa9bda03278aa020f49ee6943806084e1ab5aabdbdb",
+    "references/roles/编程手/scripts/repro_manifest.py": "db9bf7b357fafe49b1595492ceb3fd7401a2150d551725347aa1e9efc684a09a",
+    "references/roles/编程手/scripts/plot_style.py": "f3de0a0c858d6018310d7e461574697a4cec7b28e5e20b8ccdaa7749772147e2",
+    "tools/figure/scripts/profile_data.py": "d8a2a72c2607c390f2d3ed1508209d515ad4fbf833fa1602ab9da519b3596ec4",
+    "tools/figure/scripts/check_figure.py": "861191858ff47c5af5247f08d0759b14956a2a7e7d8eafcc6b414d37b9d70f06",
+    "tools/figure/scripts/export_figure.py": "40ce3bcd31dfc4b33e38a1cb180c75dc730ee6fa046f04934c79f285c6f890c1"
+  }
+}

@@ -1,0 +1,34 @@
+# Private archives, simulator sessions, downloads, and local verification output
+.local/
+work/
+results/official/
+results/official-practice/
+**/actions.jsonl
+**/ui_observations.jsonl
+*.jlog
+*.pvm/
+*.exe
+*.dll
+*.dmg
+*.7z
+*.zip
+*.mp4
+
+# Environments, credentials, and generated build output
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+.DS_Store
