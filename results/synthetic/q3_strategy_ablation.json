@@ -1,0 +1,33 @@
+{
+  "scenario_origin": "local_synthetic_not_official",
+  "evaluation": {
+    "seed_range": "20260911-20260960",
+    "seeds": 50,
+    "all_complete": true,
+    "fallbacks": 0,
+    "mean_s_per_source": {
+      "adaptive": 417.72123076351477,
+      "adaptive_q25": 351.3372008915088,
+      "adaptive_q25_fine": 345.97728036646555,
+      "adaptive_q10": 356.06605536947177,
+      "adaptive_q10_dynamic": 333.75243064811474
+    },
+    "reduction_vs_adaptive_percent": {
+      "adaptive_q25": 15.891945389193808,
+      "adaptive_q25_fine": 17.17507876387201,
+      "adaptive_q10": 14.759885505783165,
+      "adaptive_q10_dynamic": 20.101635715743026
+    }
+  },
+  "independent_validation": {
+    "seed_range": "20261011-20261060",
+    "seeds": 50,
+    "strategy": "adaptive_q10_dynamic",
+    "mean_s_per_source": 322.6153282186446,
+    "median_s_per_source": 313.8798573547619,
+    "under_300_s_per_source": 18,
+    "all_complete": true,
+    "fallbacks": 0
+  },
+  "interpretation": "Paired local synthetic ablation only; this is not an official simulator score or award prediction."
+}
