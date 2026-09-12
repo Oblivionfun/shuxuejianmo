@@ -1,0 +1,28 @@
+\section{问题三：全向源的覆盖与在线清除}
+\subsection{七站全域发现证书}
+取原点和半径 $a=900\sqrt3\,\mathrm m$、方位角 $0^\circ,60^\circ,\ldots,300^\circ$ 的六个外围站。对任意源点 $g$，若 $\|g\|\le900$，原点距其不超过 $900$；否则选择与 $g$ 夹角不超过 $30^\circ$ 的外围站。距离平方为 $r^2+a^2-2ar\cos\alpha$，在 $r\in[900,1800]$、$\alpha\le30^\circ$ 上的最大值为 $900^2$。故至少一个站点距源不超过 $900\,\mathrm m<1000\,\mathrm m$，扫描七站可以发现全向源。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[thick] (0,0) circle (2.2);\foreach \a in {0,60,120,180,240,300}{\fill ({2.0*cos(\a)},{2.0*sin(\a)}) circle (2pt);}
+\fill (0,0) circle (2pt);\foreach \a/\b in {0/1,60/2,120/3,180/4,240/5,300/6}{\node at ({2.25*cos(\a)},{2.25*sin(\a)}) {\b};}
+\fill[red] (0.65,1.25) circle (2pt) node[above right] {源};\draw[dashed] (0.65,1.25)--(1,1.732);
+\node at (0,-2.65) {原点加六站的全向覆盖};
+\end{tikzpicture}
+\caption{问题三七站覆盖构造}\label{fig:q3stations}
+\source{理论构造；比例仅作示意。}
+\end{figure}
+
+\subsection{在线策略}
+每个频道维护观测列表、外包可能区域和清除状态。到达站点后，先测量尚未被证明不存在的频道；$\texttt{no\_signal}$ 不直接删除频道。对已有方向反馈的频道，按当前最小包围圆半径保留最多四个测向名额，优先处理不确定性最大的频道。定位达到式 \eqref{eq:clear-cert} 后立即清除；最多连续六次主动测向仍未收敛时，转入 $25\,\mathrm m$ 光学方格兜底。
+
+默认入口为 `adaptive\_q10\_dynamic`：刚发现频道的第一处主动点提高移动惩罚，之后转向 $q_{10}$ 信息目标。七站全部访问且所有已发现频道已清除后，才根据频道上界和覆盖证书退出。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[>=Latex,node distance=8mm]
+\node[draw,rounded corners] (a) {站点扫描};\node[draw,rounded corners,right=of a] (b) {楔形更新};\node[draw,rounded corners,right=of b] (c) {MEC判定};\node[draw,rounded corners,right=of c] (d) {清除/兜底};
+\draw[->] (a)--(b);\draw[->] (b)--(c);\draw[->] (c)--(d);\draw[->,rounded corners] (d) |- ++(0,-9mm) -| (a);
+\end{tikzpicture}
+\caption{问题三在线状态机}\label{fig:q3state}
+\source{策略伪流程。}
+\end{figure}

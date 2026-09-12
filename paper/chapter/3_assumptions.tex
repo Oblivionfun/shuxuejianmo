@@ -1,0 +1,20 @@
+\section{模型假设}
+\begin{enumerate}
+\item 干扰源在一次任务期间静止，且位置位于半径 $1800\,\mathrm m$ 的目标圆域内；不同频道至多对应一个源。
+\item 测向误差的绝对值不超过 $1^\circ$。接口保留两位小数，为覆盖舍入边界，程序内部使用 $\varepsilon_{\rm api}=1.01^\circ$。
+\item 当检测点与源距离不超过 $20\,\mathrm m$ 时，光学装置可以完成清除；因此定位算法必须保证可能区域整体落入该半径，而不能只使用点估计。
+\item 机器狗按串行接口执行动作；动作返回未被接受时，不推进本地位置和虚拟时间。网络重试沿用同一请求标识，不并发发送动作。
+\end{enumerate}
+
+以上假设直接服务于题面规则。圆盘外切多边形的边数、候选角度间隔、路程权重和覆盖网格属于算法参数，不当作物理事实。合成实验采用圆域均匀源位置、$N\in\{10,\ldots,16\}$ 和频道无放回抽样，仅用于可重复比较；官方模拟器的隐藏分布未知。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[>=Latex]
+\node[draw,rounded corners,fill=blue!8,minimum width=31mm,minimum height=9mm] (a) at (0,0) {题面事实};
+\node[draw,rounded corners,fill=green!8,minimum width=31mm,minimum height=9mm] (b) at (4,0) {实现参数};
+\node[draw,rounded corners,fill=orange!12,minimum width=31mm,minimum height=9mm] (c) at (2,-1.6) {实验分布};
+\draw[->] (a)--(b) node[midway,above] {固定约束};\draw[->] (a)--(c);\draw[->] (b)--(c) node[midway,right] {仅用于比较};
+\end{tikzpicture}
+\caption{假设、实现参数和实验分布的边界}\label{fig:assumption}
+\source{本文分层记录。}
+\end{figure}

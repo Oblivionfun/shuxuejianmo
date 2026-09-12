@@ -1,0 +1,38 @@
+\appendix
+\section{支撑材料与复现清单}
+\footnotesize\sloppy
+\begin{longtable}{p{0.31\linewidth}p{0.55\linewidth}}
+\caption{当前版本的可复现文件}\label{tab:files}\\
+\toprule 文件 & 用途 \\
+\midrule\endfirsthead
+\toprule 文件 & 用途 \\
+\midrule\endhead
+\nolinkurl{src/cumcm_b/geometry.py} & 楔形交、凸包、直径、最小包围圆和光学方格 \\
+\nolinkurl{src/cumcm_b/policy.py} & q3/q4 覆盖策略、主动测向、联合巡回 \\
+\nolinkurl{src/cumcm_b/protocol.py} & 串行接口、计时、幂等请求和失败记录 \\
+\nolinkurl{scripts/benchmark_q3_strategies.py} & q3 共同种子配对实验 \\
+\nolinkurl{scripts/benchmark_q4_optimization.py} & q4 三种巡回策略配对实验 \\
+\nolinkurl{results/synthetic/} & 本地合成实验逐局结果和汇总 \\
+\nolinkurl{results/practice/summary.csv} & 匿名官方演练汇总 \\
+\nolinkurl{docs/} & 题面转译、证明、边界和复现说明 \\
+\bottomrule
+\end{longtable}
+
+\section{核心算法摘录}
+\begin{lstlisting}[language=Python,caption={安全清除判定的核心逻辑}]
+def should_clear(belief):
+    polygon = belief.outer_polygon()
+    center, radius = enclosing_circle(polygon)
+    return radius <= 19.75, center
+
+for channel in pending_channels:
+    feedback = measure(channel, current_position)
+    update_belief(channel, feedback)
+    if feedback.kind == "near":
+        clear(channel, current_position)
+    elif should_clear(belief[channel])[0]:
+        clear(channel, should_clear(belief[channel])[1])
+    elif active_queries[channel] >= 6:
+        optical_fallback(channel, belief[channel])
+\end{lstlisting}
+完整源码、逐动作日志和正式测试原始文件不嵌入论文，以仓库当前提交和官方要求的支撑材料为准；提交前重新核对版本号、哈希和匿名化范围。

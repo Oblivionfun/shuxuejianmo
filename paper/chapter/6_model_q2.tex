@@ -1,0 +1,33 @@
+\section{问题二：主动测向点的选择}
+\subsection{可接收候选集}
+首次观测得到外包区域 $\mathcal P_1$ 后，若希望对全向源保留接收保证，候选点 $q$ 应满足 $\max_{g\in\mathcal P_1}\|q-g\|\le1000$。因为距离函数对 $g$ 是凸函数，最大值在凸多边形顶点取得，故可用
+\begin{equation}\label{eq:safe}
+\mathcal C_{\rm safe}=\bigcap_{v\in\operatorname{vert}(\mathcal P_1)}B(v,1000)
+\end{equation}
+离散构造候选集。若该集合为空，程序保留风险标记并继续做后验核验，不把离散空集解释成物理不可能。
+
+\subsection{几何误差代理与移动惩罚}
+在假定源位置 $g$ 下，角度观测的雅可比行为向量为
+\begin{equation}
+h_i(g)=\frac{1}{\|g-p_i\|^2}\bigl(-(g_y-p_{iy}),\;g_x-p_{ix}\bigr).
+\end{equation}
+将已有观测和候选观测组成矩阵 $H$，用 $H^+$ 估计角度盒误差引起的位置扰动，定义
+\begin{equation}\label{eq:score}
+U(q,g)=\varepsilon_{\rm api}\sum_j\|H^+_{:,j}\|_2,\qquad
+S(q)=Q_{\alpha}\{U(q,g):g\in\mathcal G\}+\lambda\|q-p_{\rm cur}\|.
+\end{equation}
+其中 $\mathcal G$ 由外包多边形顶点、边中点、中心和近边界采样组成。$U$ 只用于排序，最终清除仍由式 \eqref{eq:clear-cert} 认证。
+
+当前策略在首次主动点使用较大移动权重，先获取第二条独立几何约束；后续阶段使用 $\alpha=0.10$ 的分位数目标和 $\lambda=0.02$。作为消融，保留最坏值、$\alpha=0.25$、中位数和更细角度候选。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[gray!50] (-3,-2.2) rectangle (3.2,2.3);\draw[thick] (-2.3,-1.3)--(1.9,-1.3)--(1.0,1.5)--cycle;
+\fill (0.2,0.0) circle (2pt) node[below right] {$p_{\rm cur}$};
+\foreach \a/\lab in {20/A,80/B,140/C,200/D,260/E,320/F}{\fill ({1.6*cos(\a)},{1.6*sin(\a)}) circle (1.4pt) node[above right] {\lab};}
+\draw[->,blue] (0.2,0)--(1.6,0.58) node[midway,above] {$S(q)$};
+\node at (0,-2.65) {候选点同时受接收、信息和路程约束};
+\end{tikzpicture}
+\caption{问题二候选点的筛选与排序示意}\label{fig:q2candidate}
+\source{候选生成逻辑；点位为示意。}
+\end{figure}

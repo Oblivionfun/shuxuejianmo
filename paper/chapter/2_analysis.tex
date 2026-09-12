@@ -1,0 +1,25 @@
+\section{问题分析与数据边界}
+\subsection{几何信息的保守表达}
+若检测点为 $p_i=(x_i,y_i)$、示向度为 $\theta_i$，则真实源点 $g$ 位于以 $p_i$ 为顶点、方向 $\theta_i$ 为中心的误差楔形内。将每个楔形写成两个线性不等式后，多次观测的交集仍为凸集。接收半径 $R\in[1000,1500]\,\mathrm m$ 形成圆盘边界；实现以外切正多边形包围圆盘，宁可保留少量不可能点，也不因离散化排除真实点。
+
+\subsection{时间和风险的分解}
+题面虚拟时间按
+\begin{equation}\label{eq:time}
+T=\frac{L}{5}+N_{\rm sw}+5N_{\rm mea}+3N_{\rm clr}+2N_{\rm suc}
+\end{equation}
+计算，其中 $L$ 为移动距离。移动项通常远大于一次测量项，因此候选点不只追求几何收缩，还要惩罚绕行。另一方面，覆盖站和频道排查构成与源数量无关的固定开销，比较不同样本时不能只看 $T/N$。
+
+\subsection{实验设计与证据等级}
+本稿将证据分为三层。第一层是题面和几何推导，支撑“不会漏掉”的条件；第二层是 50 个共同源配置的本地合成配对实验，支撑策略间相对比较；第三层是用户在官方模拟器中手动选择演练得到的 7 局记录，支撑接口、计时、日志和完成证书。正式测试数据目前为空，表格中以“待替换”保留位置。所有本地随机场景、固定种子和官方演练均不写成正式成绩。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[->] (-3.4,0)--(3.6,0) node[right] {$x$};\draw[->] (0,-2.9)--(0,3.1) node[above] {$y$};
+\draw (0,0) circle (2.3);\draw[thick,->] (0,0)--(1.7,1.15) node[midway,above] {$\theta_i$};
+\draw[red!70!black,thick] (1.7,1.15)--(3.0,2.0);\draw[red!70!black,thick] (1.7,1.15)--(2.9,0.3);
+\draw[dashed] (0,0)--(2.3,0) node[midway,below] {$R$};\fill (1.7,1.15) circle (2pt) node[above right] {$p_i$};
+\node at (0,-2.55) {测向楔形与接收圆盘的外包};
+\end{tikzpicture}
+\caption{单次测向反馈的几何约束}\label{fig:wedge}
+\source{根据题面误差界绘制；坐标仅作示意。}
+\end{figure}

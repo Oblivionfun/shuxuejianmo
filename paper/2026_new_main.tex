@@ -1,0 +1,37 @@
+% !TeX program = xelatex
+\documentclass[UTF8,a4paper,zihao=-4,fontset=fandol]{ctexart}
+\usepackage[left=24mm,right=24mm,top=22mm,bottom=22mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,graphicx,float,array,longtable,enumitem,xcolor,hyperref,listings,tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\setmainfont{TeX Gyre Termes}
+\hypersetup{colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black}
+\ctexset{section={format=\centering\heiti\zihao{4},name={,、},number=\chinese{section},aftername=\quad},subsection={format=\heiti\zihao{-4},number=\arabic{section}.\arabic{subsection},aftername=\quad},subsubsection={format=\heiti\zihao{五号},number=\arabic{section}.\arabic{subsection}.\arabic{subsubsection},aftername=\quad}}
+\setlength{\parindent}{2em}\linespread{1.18}\pagestyle{plain}
+\setlist{nosep,leftmargin=2em}
+\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,frame=single,columns=fullflexible}
+\newcommand{\source}[1]{\par\smallskip\noindent{\footnotesize 数据来源：#1}}
+\newcommand{\placeholder}{\textcolor{gray}{（正式测试数据待取得后替换；本稿中的数值均明确标注为本地合成或官方演练。）}}
+\begin{document}
+\begin{center}
+{\heiti\zihao{2}机器狗对无线电干扰源的定位与清除研究\par}
+\vspace{8pt}{\zihao{-4}全国大学生数学建模竞赛 B 题阶段论文稿\par}
+\vspace{6pt}{\zihao{-5}匿名版；队号、成员信息和正式测试结果在提交前按官方要求补录\par}
+\end{center}
+\begin{abstract}
+题目要求机器狗在半径 $1800\,\mathrm m$ 的区域内，通过带有测角误差的串行接口寻找并清除数量未知的无线电干扰源。我们把任务写成“有界误差定位—覆盖证书—在线巡回”的组合决策问题。对单源定位，采用测向楔形半平面交，并以外切圆盘保持接收约束；对清除判定，以可能区域的最小包围圆半径不超过 $19.75\,\mathrm m$ 作为带余量的安全证书；对全向源，构造原点加六站覆盖；对未知朝向源，构造边长 $995\,\mathrm m$ 的闭三角网格，并用凸组合反证保证至少一个顶点同时满足距离和发射半平面条件。问题 2 在候选点上计算线性化误差代理并加入移动代价，问题 3 采用动态 $q_{10}$ 测向，问题 4 采用覆盖与末端清除联合巡回。50 个共同合成场景中，问题 3 的动态策略为 $333.75\,\mathrm{s/源}$，问题 4 的联合策略为 $694.93\,\mathrm{s/源}$，均完成全部清除；这些数字是本地验证结果。已有 7 局官方演练共清除 92 个源，验证了接口、计时和完成证书，但不同策略未使用共同隐藏场景，不能替代正式成绩。\par
+\noindent\textbf{关键词：}无线电测向；有界误差；最小包围圆；覆盖证明；在线巡回
+\end{abstract}
+\newpage
+\input{chapter/1_restatement}
+\input{chapter/2_analysis}
+\input{chapter/3_assumptions}
+\input{chapter/4_notation}
+\input{chapter/5_model_q1}
+\input{chapter/6_model_q2}
+\input{chapter/7_model_q3}
+\input{chapter/8_sensitivity}
+\input{chapter/9_evaluation}
+\input{chapter/10_ai_declaration}
+\input{chapter/11_reference}
+\input{chapter/A_appendix}
+\end{document}

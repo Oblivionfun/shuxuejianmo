@@ -1,0 +1,49 @@
+\section{实验结果、敏感性与模型评价}
+\subsection{问题一与问题二的数值核验}
+问题一构造数据得到三角形直径 $39.0000\,\mathrm m$、穷举直径 $39.0000\,\mathrm m$、最小包围圆半径 $22.5167\,\mathrm m$，与理论推导一致。问题二在 6 个源距、3 个首次误差和 3 个第二次误差组合下进行后验核验，全部候选点可接收；例如源距 $600\,\mathrm m$ 时后验半径约为 $16.48$--$16.71\,\mathrm m$，源距 $1200\,\mathrm m$ 时约为 $38.15$--$44.16\,\mathrm m$。这说明远距离测向的几何退化会直接反映到候选点排序中。
+
+\subsection{问题三与问题四的配对结果}
+\begin{table}[H]\centering\small
+\caption{共同合成场景的策略比较}\label{tab:paired}
+\begin{tabular}{lrrrrr}
+\toprule
+方案 & 场景数 & 平均秒/源 & 平均路程(m) & 完整局数 & 相对基线 \\
+\midrule
+q3 `adaptive` & 50 & 417.72 & -- & 50/50 & 基线 \\
+q3 `adaptive\_q10\_dynamic` & 50 & 333.75 & -- & 50/50 & -20.10\% \\
+q4 新26站+`adaptive` & 50 & 889.65 & 48374.14 & 50/50 & 基线 \\
+q4 `q4\_joint` & 50 & 694.93 & 34468.24 & 50/50 & -21.89\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+\source{本地合成配对实验；固定共同源配置，scenario\_origin=local\_synthetic\_not\_official。}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[y=0.009cm,x=1cm]
+\draw[->] (0,0)--(5.4,0) node[right] {策略};\draw[->] (0,0)--(0,1000) node[above] {秒/源};
+\fill[gray!50] (0.6,0) rectangle (1.4,417.72);\fill[blue!55] (1.8,0) rectangle (2.6,333.75);
+\fill[gray!50] (3.0,0) rectangle (3.8,889.65);\fill[green!55] (4.2,0) rectangle (5.0,694.93);
+\node[below] at (1,0) {q3基};\node[below] at (2.2,0) {q3动};\node[below] at (3.4,0) {q4基};\node[below] at (4.6,0) {q4联};
+\node[above] at (1,440) {417.72};\node[above] at (2.2,356) {333.75};\node[above] at (3.4,912) {889.65};\node[above] at (4.6,718) {694.93};
+\end{tikzpicture}
+\caption{本地合成配对实验的平均秒/源}\label{fig:benchmark}
+\source{results/synthetic/q3\_strategy\_comparison/summary.json 与 q4\_optimization/summary.json。}
+\end{figure}
+
+\subsection{官方演练与正式数据边界}
+官方演练历史记录共 7 局，92/92 个源清除且完成证书成立。三局问题三的每源虚拟时间为 $368.57$、$406.26$、$395.72\,\mathrm s$；三局历史三角方案问题四为 $1045.72$、$1086.38$、$850.42\,\mathrm s/源$。另有一局方格方案为 $1174.51\,\mathrm s/源$。25 局问题三策略组演练全部完整，但策略组使用不同隐藏场景，不能用于无偏排序。\textbf{正式测试结果：待正式测试后填入，当前不作成绩或奖项推断。}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=0.65cm,y=0.01cm]
+\draw[->] (0,0)--(8.2,0) node[right] {官方演练局};\draw[->] (0,0)--(0,1300) node[above] {秒/源};
+\foreach \x/\v in {1/368.57,2/406.26,3/395.72,4/1174.51,5/1045.72,6/1086.38,7/850.42}{\fill[gray!60] (\x-0.22,0) rectangle (\x+0.22,\v);\node[above,rotate=60,font=\scriptsize] at (\x,\v+15) {\v};}
+\foreach \x/\t in {1/q3,2/q3,3/q3,4/q4方,5/q4三,6/q4三,7/q4三}{\node[below,font=\scriptsize] at (\x,-55) {\t};}
+\end{tikzpicture}
+\caption{官方演练单局每源时间（不等同正式成绩）}\label{fig:official}
+\source{results/practice/summary.csv；官方演练，非正式测试。}
+\end{figure}
+
+\subsection{敏感性、优点和限制}
+将问题四最终清除顺序由最近邻改为开放路径 2-opt，在 50 局配对实验中把均值从 $708.15$ 降至 $697.90\,\mathrm s/源$，37/50 局获胜。将中途未收敛目标的光学回退延后到末端，是减少无效清除尝试的主要原因。相反，限制未知频道只扫描前 10--12 个站点虽可得到约 $674\,\mathrm s/源$，但完整清除率仅约 70\%，因此排除在主线之外。
+
+当前方案的优点是证书清晰、状态可审计、接口动作串行且有有限兜底；限制是网格和候选点仍是启发式构造，官方隐藏分布、正式评分函数和网络环境尚未被独立验证。$400\,\mathrm s/源$ 目标在严格完成 26 站覆盖和 20 频道排查的协议下受到移动与扫描下界约束，不能靠局部调参保证达到；后续可将覆盖站位置、目标和测向点放入同一滚动巡回模型，并用正式演练数据重新校准。

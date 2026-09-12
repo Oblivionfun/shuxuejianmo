@@ -14,5 +14,6 @@
 | 验证范围 | [验证记录](verification.md) |
 | 旧目录去向 | [迁移说明](migration.md) |
 | 来源与引用 | [工具与理论来源](attribution.md)、[题目输入校验值](problem-inputs.json) |
+| 论文源稿与写作样本 | [`paper/`](../paper/)、[国奖论文写作样本分析](award_paper_writing_review.md) |
 
 建议按 `overview → results → model → reproduction → simulator` 阅读。最终论文仍需队伍人工复核、格式核验和当届 AI 使用说明。

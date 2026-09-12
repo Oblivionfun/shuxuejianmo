@@ -1,0 +1,30 @@
+\section{问题四：未知朝向源的覆盖与联合巡回}
+\subsection{定向盲区的覆盖证书}
+未知朝向意味着接收条件除距离外还要求检测点位于源发射方向的闭半平面内。我们使用边长 $s=995\,\mathrm m$ 的等边三角剖分，保留与 $\Omega$ 相交的闭三角形的全部顶点，再补入原点，共 26 个站点。任意源点属于某个保留三角形；三个顶点距源均不超过 $995\,\mathrm m<1000\,\mathrm m$。
+
+设发射方向单位向量为 $d$。若三个顶点均满足 $d\cdot(p_j-g)<0$，则对包含 $g$ 的凸组合加权会得到 $d\cdot(g-g)<0$，矛盾。因此至少一个顶点满足闭半平面条件。该证明同时覆盖边界点、向外发射方向和源位于网格顶点的情形。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[scale=0.8]
+\foreach \y in {0,1,2,3}{\foreach \x in {0,1,2,3}{\coordinate (p\x\y) at ({\x+0.5*\y},{0.86*\y});}}
+\foreach \y in {0,1,2}{\foreach \x in {0,1,2}{\draw[gray!50] (p\x\y)--(p\the\numexpr\x+1\relax\y)--(p\x\the\numexpr\y+1\relax);}}
+\draw[thick] (p00)--(p30)--(p33)--(p03)--cycle;\fill[red] (1.6,1.25) circle (2.2pt) node[above] {$g$};
+\node at (2,-0.7) {三角形直径 $995\,\mathrm m$};
+\end{tikzpicture}
+\caption{问题四的闭三角网格覆盖示意}\label{fig:q4tri}
+\source{当前 26 站构造；网格比例仅作示意。}
+\end{figure}
+
+\subsection{联合巡回策略}
+覆盖阶段按固定开路径访问 26 个站点，对未知频道逐站扫描；对已有方向频道只保留最多四个最大包围圆的补充测向，默认不在巡回中触发光学方格。覆盖结束后，将所有已发现频道的当前包围圆圆心作为目标点，采用最近邻初始化、开放路径 2-opt 改善访问顺序，逐目标执行安全清除或有限兜底。该分阶段设计来自官方演练日志：同一未收敛频道在多个站点重复清除会产生大量无效请求。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[thick,rounded corners] (-3,-1.9) rectangle (3.2,2.0);\draw[step=0.9,gray!40] (-2.8,-1.7) grid (3,1.8);
+\draw[very thick,blue,->] (-2.4,-1.3)--(-1.2,0.8)--(0.0,-1.2)--(1.1,1.3)--(2.6,-0.8);
+\foreach \p in {(-2.4,-1.3),(-1.2,0.8),(0,-1.2),(1.1,1.3),(2.6,-0.8)}{\fill \p circle (2pt);}
+\node at (0,-2.35) {覆盖阶段收集信息，末端阶段清除目标};
+\end{tikzpicture}
+\caption{问题四两阶段联合巡回示意}\label{fig:q4route}
+\source{路径结构示意；真实站点坐标由程序生成。}
+\end{figure}
