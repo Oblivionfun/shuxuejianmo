@@ -130,6 +130,9 @@ class CoveragePolicy:
         candidate_angle_step=22.5,
         known_measure_budget=4,
         localize_threshold_m=300.0,
+        q4_objective="q10",
+        defer_q4_localization=True,
+        q4_final_order="tsp",
     ):
         if strategy not in (
             "adaptive",
@@ -155,10 +158,17 @@ class CoveragePolicy:
         self.candidate_angle_step = float(candidate_angle_step)
         self.known_measure_budget = int(known_measure_budget)
         self.localize_threshold_m = float(localize_threshold_m)
+        self.q4_objective = q4_objective
+        self.defer_q4_localization = bool(defer_q4_localization)
+        self.q4_final_order = q4_final_order
         if self.known_measure_budget < 0:
             raise ValueError("known_measure_budget must be nonnegative")
         if self.localize_threshold_m < 0:
             raise ValueError("localize_threshold_m must be nonnegative")
+        if self.q4_objective not in {"worst", "p90", "q25", "q10", "median"}:
+            raise ValueError("q4_objective must be worst, p90, q25, q10, or median")
+        if self.q4_final_order not in {"nearest", "tsp"}:
+            raise ValueError("q4_final_order must be nearest or tsp")
         self.tracks = {k: Track() for k in range(1, 21)}
         self.visited = []
         self.fallback_actions = 0
@@ -193,7 +203,7 @@ class CoveragePolicy:
             track.belief.observe(p, reply["svd_deg"])
         return kind
 
-    def localize(self, k):
+    def localize(self, k, allow_fallback=True):
         track = self.tracks[k]
         attempted = []
         for _ in range(self.max_active):
@@ -213,7 +223,7 @@ class CoveragePolicy:
                 "adaptive_q10_dynamic": "q10",
                 "adaptive_q10_dynamic_fine": "q10",
                 "adaptive_median": "median",
-                "q4_joint": "worst",
+                "q4_joint": self.q4_objective,
                 "fixed": "worst",
             }[self.strategy]
             # The first active query is a coarse acquisition step: avoid a long
@@ -260,6 +270,16 @@ class CoveragePolicy:
             if not self.clear_at(k, c, "enclosing_circle"):
                 raise ProtocolError("certified sub-20m clear failed")
             return
+        if self.strategy == "q4_joint" and not allow_fallback:
+            self.events.append(
+                {
+                    "event": "deferred_fallback",
+                    "channel": k,
+                    "radius_m": r,
+                    "observations": len(track.belief.observations),
+                }
+            )
+            return
         points = list(optical_cover_points(track.belief))
         self.events.append({"event": "fallback", "channel": k, "cells": len(points), "radius_m": r})
         while points:
@@ -274,7 +294,12 @@ class CoveragePolicy:
         """Choose feedback queries without weakening the q4 coverage certificate."""
         if self.strategy != "q4_joint":
             return [k for k, t in self.tracks.items() if not t.cleared]
-        unseen = [k for k, t in self.tracks.items() if not t.seen and not t.cleared]
+        unseen = [
+            k
+            for k, t in self.tracks.items()
+            if not t.seen
+            and not t.cleared
+        ]
         known = [k for k, t in self.tracks.items() if t.seen and not t.cleared]
         known.sort(key=lambda k: -enclosing_circle(self.tracks[k].belief.polygon)[1])
         return unseen + known[: self.known_measure_budget]
@@ -295,7 +320,54 @@ class CoveragePolicy:
             if not candidates:
                 return
             _, channel = min(candidates)
-            self.localize(channel)
+            self.localize(channel, allow_fallback=False)
+
+    def _next_known_channel(self):
+        """Select the next discovered target for the final clearing pass."""
+        known = [k for k, t in self.tracks.items() if t.seen and not t.cleared]
+        if not known:
+            return None
+        centers = {
+            k: enclosing_circle(self.tracks[k].belief.polygon)[0]
+            for k in known
+        }
+        if self.q4_final_order == "nearest" or len(known) < 3:
+            return min(
+                known,
+                key=lambda kk: np.linalg.norm(centers[kk] - self.client.position),
+            )
+        # Receding-horizon open-path 2-opt: keep the current robot position as
+        # the depot, then optimize only the order of the remaining centres.
+        route = [min(known, key=lambda kk: np.linalg.norm(centers[kk] - self.client.position))]
+        remaining = set(known) - set(route)
+        while remaining:
+            prev = centers[route[-1]]
+            nxt = min(remaining, key=lambda kk: np.linalg.norm(centers[kk] - prev))
+            route.append(nxt)
+            remaining.remove(nxt)
+        def path_length(order):
+            total = 0.0
+            previous = self.client.position
+            for channel in order:
+                total += float(np.linalg.norm(centers[channel] - previous))
+                previous = centers[channel]
+            return total
+
+        changed = True
+        while changed:
+            changed = False
+            current_length = path_length(route)
+            for i in range(len(route) - 1):
+                for j in range(i + 2, len(route) + 1):
+                    candidate = route[:i] + route[i:j][::-1] + route[j:]
+                    if path_length(candidate) + 1e-8 < current_length:
+                        route = candidate
+                        current_length = path_length(route)
+                        changed = True
+                        break
+                if changed:
+                    break
+        return route[0]
 
     def run(self):
         started = time.monotonic()
@@ -304,6 +376,7 @@ class CoveragePolicy:
         if self.strategy == "q4_joint" and self.question == 4 and self.coverage == "triangular":
             points = q4_station_route(points)
         pending = list(range(len(points)))
+        self.coverage_station_index = 0
         complete = False
         reason = "not_started"
         try:
@@ -330,7 +403,12 @@ class CoveragePolicy:
                     break
                 self.visited.append(index)
                 pending.remove(index)
-                self._localize_nearby()
+                self.coverage_station_index += 1
+                # During the fixed cover route, defer active localization for
+                # q4 until the final station.  Re-entering the optical grid at
+                # every station can repeat the same expensive failed sweep.
+                if self.strategy != "q4_joint" or not self.defer_q4_localization:
+                    self._localize_nearby()
                 if self.client.metrics["cleared"] == 16:
                     complete = True
                     reason = "upper_bound_16"
@@ -352,17 +430,11 @@ class CoveragePolicy:
                     reason = "upper_bound_16"
                     break
             if self.strategy == "q4_joint":
-                known = [k for k, t in self.tracks.items() if t.seen and not t.cleared]
-                while known:
-                    k = min(
-                        known,
-                        key=lambda kk: np.linalg.norm(
-                            enclosing_circle(self.tracks[kk].belief.polygon)[0]
-                            - self.client.position
-                        ),
-                    )
+                while True:
+                    k = self._next_known_channel()
+                    if k is None:
+                        break
                     self.localize(k)
-                    known.remove(k)
             if not pending and all(not t.seen or t.cleared for t in self.tracks.values()):
                 complete = True
                 reason = "coverage_and_clearing"

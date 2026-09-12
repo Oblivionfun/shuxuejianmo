@@ -56,7 +56,7 @@ def main():
     out = args.output_dir or Path(".local/practice") / time.strftime("%Y%m%d-%H%M%S")
     out.mkdir(parents=True, exist_ok=False)
     strategy = args.strategy or (LATEST_Q3_STRATEGY if args.question == 3 else LATEST_Q4_STRATEGY)
-    weight = 0.04 if strategy in {"adaptive_q25", "adaptive_q25_fine", "q4_joint"} else 0.02
+    weight = 0.04 if strategy in {"adaptive_q25", "adaptive_q25_fine"} else 0.02
     if strategy == "adaptive_q10_dynamic":
         weight = 0.02
     root = Path(__file__).resolve().parent
@@ -73,6 +73,9 @@ def main():
         "travel_weight": weight,
         "known_measure_budget": 4 if strategy == "q4_joint" else None,
         "localize_threshold_m": 300.0 if strategy == "q4_joint" else None,
+        "q4_objective": "q10" if strategy == "q4_joint" else None,
+        "q4_final_order": "tsp" if strategy == "q4_joint" else None,
+        "defer_q4_localization": True if strategy == "q4_joint" else None,
         "practice_ready_is_manual_confirmation": True,
         "sha256": {
             str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources
@@ -92,6 +95,9 @@ def main():
         coverage=args.coverage,
         known_measure_budget=4,
         localize_threshold_m=300.0,
+        q4_objective="q10",
+        q4_final_order="tsp",
+        defer_q4_localization=True,
     )
     result = policy.run()
     result["scenario_origin"] = "official_practice_user_selected_not_api_verified"

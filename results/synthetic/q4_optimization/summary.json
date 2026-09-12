@@ -15,22 +15,22 @@
     "optimized_q4_joint": [
       "triangular",
       "q4_joint",
-      0.04
+      0.02
     ]
   },
   "mean_s_per_source": {
     "legacy_adaptive": 889.50439810338,
     "optimized_adaptive": 889.6493062431017,
-    "optimized_q4_joint": 717.0446550686477
+    "optimized_q4_joint": 694.9260381715803
   },
   "mean_distance_m": {
     "legacy_adaptive": 48464.831157791334,
     "optimized_adaptive": 48374.141105878865,
-    "optimized_q4_joint": 35856.45277729922
+    "optimized_q4_joint": 34468.24263937696
   },
   "all_complete": true,
-  "joint_wins_vs_optimized_adaptive": 46,
-  "joint_reduction_vs_optimized_adaptive_percent": 19.401425928531978,
-  "joint_reduction_vs_legacy_percent": 19.38829570741355,
+  "joint_wins_vs_optimized_adaptive": 48,
+  "joint_reduction_vs_optimized_adaptive_percent": 21.887643446136984,
+  "joint_reduction_vs_legacy_percent": 21.87491825185842,
   "interpretation": "paired synthetic ablation only; no official score claim"
 }

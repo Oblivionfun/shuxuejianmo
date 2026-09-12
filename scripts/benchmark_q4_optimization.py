@@ -16,7 +16,7 @@ from cumcm_b.synthetic import SyntheticArena, generate_sources
 VARIANTS = {
     "legacy_adaptive": ("triangular_legacy", "adaptive", 0.02),
     "optimized_adaptive": ("triangular", "adaptive", 0.02),
-    "optimized_q4_joint": ("triangular", "q4_joint", 0.04),
+    "optimized_q4_joint": ("triangular", "q4_joint", 0.02),
 }
 
 
@@ -30,6 +30,9 @@ def run(seed: int, name: str) -> dict:
         strategy=strategy,
         travel_weight=weight,
         coverage=coverage,
+        q4_objective="q10" if strategy == "q4_joint" else "worst",
+        q4_final_order="tsp" if strategy == "q4_joint" else "nearest",
+        defer_q4_localization=True,
     ).run()
     result.update(
         seed=seed,
