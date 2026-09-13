@@ -2,6 +2,8 @@
 \subsection{七站全域发现证书}
 取原点和半径 $a=900\sqrt3\,\mathrm m$、方位角 $0^\circ,60^\circ,\ldots,300^\circ$ 的六个外围站。对任意源点 $g$，若 $\|g\|\le900$，原点距其不超过 $900$；否则选择与 $g$ 夹角不超过 $30^\circ$ 的外围站。距离平方为 $r^2+a^2-2ar\cos\alpha$，在 $r\in[900,1800]$、$\alpha\le30^\circ$ 上的最大值为 $900^2$。故至少一个站点距源不超过 $900\,\mathrm m<1000\,\mathrm m$，扫描七站可以发现全向源。
 
+七站构造见图~\ref{fig:q3-stations}。外围站的半径并非为了逼近圆周，而是由最坏夹角 $30^\circ$ 下的距离上界反推得到；这一点使覆盖证明不依赖合成源的具体分布。
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}[x=1cm,y=1cm]
 \draw[thick] (0,0) circle (2.2);\foreach \a in {0,60,120,180,240,300}{\fill ({2.0*cos(\a)},{2.0*sin(\a)}) circle (2pt);}
@@ -9,20 +11,40 @@
 \fill[red] (0.65,1.25) circle (2pt) node[above right] {源};\draw[dashed] (0.65,1.25)--(1,1.732);
 \node at (0,-2.65) {原点加六站的全向覆盖};
 \end{tikzpicture}
-\caption{问题三七站覆盖构造}\label{fig:q3stations}
+\caption{问题三七站覆盖构造}\label{fig:q3-stations}
 \source{理论构造；比例仅作示意。}
 \end{figure}
 
 \subsection{在线策略}
-每个频道维护观测列表、外包可能区域和清除状态。到达站点后，先测量尚未被证明不存在的频道；$\texttt{no\_signal}$ 不直接删除频道。对已有方向反馈的频道，按当前最小包围圆半径保留最多四个测向名额，优先处理不确定性最大的频道。定位达到式 \eqref{eq:clear-cert} 后立即清除；最多连续六次主动测向仍未收敛时，转入 $25\,\mathrm m$ 光学方格兜底。
+每个频道维护观测列表、外包可能区域和清除状态。到达站点后，先测量尚未被证明不存在的频道；$\texttt{no\_signal}$ 不直接删除频道。对已有方向反馈的频道，按当前最小包围圆圆心的距离逐个处理，每个频道最多连续六次主动测向。定位达到式 \eqref{eq:clear-cert} 后立即清除；六次主动测向仍未收敛时，转入 $25\,\mathrm m$ 光学方格兜底。
 
-默认入口为 `adaptive\_q10\_dynamic`：刚发现频道的第一处主动点提高移动惩罚，之后转向 $q_{10}$ 信息目标。七站全部访问且所有已发现频道已清除后，才根据频道上界和覆盖证书退出。
+默认入口为 \texttt{adaptive\_q10\_dynamic}：刚发现频道的第一处主动点提高移动惩罚，之后转向 $q_{10}$ 信息目标。该“先发现、再用信息增益定位”的顺序与移动机器人寻找间歇发射源的主动搜索思路相近\cite{song}，但本题的安全清除仍由有界误差证书控制。七站全部访问且所有已发现频道已清除后，才根据频道上界和覆盖证书退出。
+
+该策略的关键是把“发现”和“清除”分开计数。设 $z_k\in\{0,1\}$ 表示频道 $k$ 是否得到过有效反馈，$c_k\in\{0,1\}$ 表示是否已清除，则每个站点结束后只允许在 $z_k=1,c_k=0$ 的集合中调用主动定位。若反馈为 \texttt{no\_signal}，仅记录一次观测，不将 $z_k$ 置为已排除；若反馈为 \texttt{near}，先按接口规则在同一点执行清除；若反馈为 \texttt{direction}，将新的楔形交集写回 $\mathcal P_k$。这种状态更新顺序保证了重试或换频不会把频道状态推进到不存在的中间态。
+
+覆盖证书给出“不会漏掉”的上界，清除证书给出“清除安全”的下界。设 $n_s$ 为已访问站点数、$n_m$ 为测量次数、$n_c$ 为清除请求数、$n_f$ 为光学兜底动作数，则运行记录至少保留 $(n_s,n_m,n_c,n_f)$ 以及每个频道的最终状态。比较策略时先筛除未完成局，再在完整局中比较式 \eqref{eq:time} 的虚拟时间；这样不会因某一策略提前停止而得到虚假的低耗时。
+
+图~\ref{fig:q3-state} 把反馈状态机画成闭环，强调每次测量后都必须回到“更新可能区域”再决定下一动作。
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}[>=Latex,node distance=8mm]
 \node[draw,rounded corners] (a) {站点扫描};\node[draw,rounded corners,right=of a] (b) {楔形更新};\node[draw,rounded corners,right=of b] (c) {MEC判定};\node[draw,rounded corners,right=of c] (d) {清除/兜底};
 \draw[->] (a)--(b);\draw[->] (b)--(c);\draw[->] (c)--(d);\draw[->,rounded corners] (d) |- ++(0,-9mm) -| (a);
 \end{tikzpicture}
-\caption{问题三在线状态机}\label{fig:q3state}
+\caption{问题三在线状态机}\label{fig:q3-state}
 \source{策略伪流程。}
+\end{figure}
+
+为检查在线策略是否真的按照状态机执行，本文从完整轨迹日志中提取每次被接受的测量和清除动作，并同步累计虚拟时间。图~\ref{fig:q3-trajectory} 中空间轨迹用于检查搜索范围和重复绕行，时间曲线用于核对动作计时；图~\ref{fig:q3-paired} 则在相同源配置下比较保守 adaptive 与动态 $q_{10}$ 主动测向策略，避免用不同随机场景混淆策略差异。
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.98\linewidth]{figures/process_q3_trajectory.png}
+\caption{问题三完整日志中的搜索轨迹与累计虚拟时间}\label{fig:q3-trajectory}
+\source{results/synthetic/q3_current_trace.json；adaptive\_q10\_dynamic，seven，种子 20260911，本地合成过程记录。}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.98\linewidth]{figures/result_q3_paired.png}
+\caption{问题三保守 adaptive 与动态 $q_{10}$ 策略的逐局配对比较}\label{fig:q3-paired}
+\source{results/synthetic/q3_strategy_comparison/runs.csv；50 个共同种子；adaptive 与 adaptive\_q10\_dynamic 配对，本地合成实验。}
 \end{figure}

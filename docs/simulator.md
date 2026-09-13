@@ -30,10 +30,10 @@ python run_practice.py --help
 
 ```powershell
 $env:CUMCM_ROBOT_ID = "当前演练对应的 robot_id"
-python run_practice.py --question 4 --coverage triangular --practice-ready
+python run_practice.py --question 4 --coverage ring25 --practice-ready
 ```
 
-问题 3 使用 `--question 3`（默认 `adaptive_q10_dynamic` 和七站）；q4 默认使用 `q4_joint` 与 26 站三角覆盖，方格基线使用 `--coverage square`，历史三角构造使用 `--coverage triangular_legacy`。`--practice-ready` 只是人工确认记录。四动作 API 不提供模式查询，客户端无法靠参数辨别演练和正式会话；当前授权范围为演练，禁止启动或连接正式测试。客户端没有启动新会话接口。
+问题 3 使用 `--question 3`（默认 `adaptive_q10_dynamic` 和七站）；q4 默认使用 `q4_joint` 与 25 站 `ring25` 环形覆盖，26 站三角构造使用 `--coverage triangular`，方格基线使用 `--coverage square`，历史三角构造使用 `--coverage triangular_legacy`。`--practice-ready` 只是人工确认记录。四动作 API 不提供模式查询，客户端无法靠参数辨别演练和正式会话；当前授权范围为演练，禁止启动或连接正式测试。客户端没有启动新会话接口。
 
 问题 3 如需复现实验对照，必须明确传入具体 `--strategy`，并为每个策略新开一局演练。策略之间不要在同一会话中切换。
 

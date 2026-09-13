@@ -1,0 +1,45 @@
+{
+  "scenario_origin": "local_synthetic_not_official",
+  "seeds": 50,
+  "variants": {
+    "legacy_adaptive": [
+      "triangular_legacy",
+      "adaptive",
+      0.02
+    ],
+    "optimized_adaptive": [
+      "triangular",
+      "adaptive",
+      0.02
+    ],
+    "optimized_q4_joint": [
+      "triangular",
+      "q4_joint",
+      0.02
+    ],
+    "ring25_q4_joint": [
+      "ring25",
+      "q4_joint",
+      0.02
+    ]
+  },
+  "mean_s_per_source": {
+    "legacy_adaptive": 889.50439810338,
+    "optimized_adaptive": 889.6493062431017,
+    "optimized_q4_joint": 695.6868727075508,
+    "ring25_q4_joint": 587.2165743844927
+  },
+  "mean_distance_m": {
+    "legacy_adaptive": 48464.831157791334,
+    "optimized_adaptive": 48374.141105878865,
+    "optimized_q4_joint": 35073.444783029,
+    "ring25_q4_joint": 28598.612059405634
+  },
+  "all_complete": true,
+  "joint_wins_vs_optimized_adaptive": 49,
+  "joint_reduction_vs_optimized_adaptive_percent": 21.8021227212141,
+  "joint_reduction_vs_legacy_percent": 21.789383594852485,
+  "ring25_wins_vs_triangular_joint": 49,
+  "ring25_reduction_vs_triangular_joint_percent": 15.591827671104596,
+  "interpretation": "paired synthetic ablation only; no official score claim"
+}

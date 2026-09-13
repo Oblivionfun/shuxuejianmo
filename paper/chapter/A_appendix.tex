@@ -2,7 +2,7 @@
 \section{支撑材料与复现清单}
 \footnotesize\sloppy
 \begin{longtable}{p{0.31\linewidth}p{0.55\linewidth}}
-\caption{当前版本的可复现文件}\label{tab:files}\\
+\caption{当前版本的可复现文件}\label{tab:q4-files}\\
 \toprule 文件 & 用途 \\
 \midrule\endfirsthead
 \toprule 文件 & 用途 \\
@@ -11,12 +11,15 @@
 \nolinkurl{src/cumcm_b/policy.py} & q3/q4 覆盖策略、主动测向、联合巡回 \\
 \nolinkurl{src/cumcm_b/protocol.py} & 串行接口、计时、幂等请求和失败记录 \\
 \nolinkurl{scripts/benchmark_q3_strategies.py} & q3 共同种子配对实验 \\
-\nolinkurl{scripts/benchmark_q4_optimization.py} & q4 三种巡回策略配对实验 \\
+\nolinkurl{scripts/benchmark_q4_optimization.py} & q4 四种覆盖与巡回策略配对实验 \\
+\nolinkurl{results/synthetic/q4_optimization_ring25/} & 25 站环形策略的逐局结果和汇总 \\
 \nolinkurl{results/synthetic/} & 本地合成实验逐局结果和汇总 \\
 \nolinkurl{results/practice/summary.csv} & 匿名官方演练汇总 \\
 \nolinkurl{docs/} & 题面转译、证明、边界和复现说明 \\
 \bottomrule
 \end{longtable}
+
+表~\ref{tab:q4-files} 给出论文数字、图表和代码之间的复现入口；敏感信息、会话编号和正式测试数据不进入版本化材料。正文结构参考公开竞赛论文的“问题重述—模型—算法—检验—评价”组织方式\cite{award2020,award2022,award2023,award2024,award2025}，这些链接仅作为写作样本来源。
 
 \section{核心算法摘录}
 \begin{lstlisting}[language=Python,caption={安全清除判定的核心逻辑}]

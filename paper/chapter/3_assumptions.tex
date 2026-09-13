@@ -8,6 +8,8 @@
 
 以上假设直接服务于题面规则。圆盘外切多边形的边数、候选角度间隔、路程权重和覆盖网格属于算法参数，不当作物理事实。合成实验采用圆域均匀源位置、$N\in\{10,\ldots,16\}$ 和频道无放回抽样，仅用于可重复比较；官方模拟器的隐藏分布未知。
 
+图~\ref{fig:q1-assumption} 将三类信息分开：题面事实决定可行域和接口，算法参数决定实现细节，合成分布只用于策略间的相对比较。
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}[>=Latex]
 \node[draw,rounded corners,fill=blue!8,minimum width=31mm,minimum height=9mm] (a) at (0,0) {题面事实};
@@ -15,6 +17,6 @@
 \node[draw,rounded corners,fill=orange!12,minimum width=31mm,minimum height=9mm] (c) at (2,-1.6) {实验分布};
 \draw[->] (a)--(b) node[midway,above] {固定约束};\draw[->] (a)--(c);\draw[->] (b)--(c) node[midway,right] {仅用于比较};
 \end{tikzpicture}
-\caption{假设、实现参数和实验分布的边界}\label{fig:assumption}
+\caption{假设、实现参数和实验分布的边界}\label{fig:q1-assumption}
 \source{本文分层记录。}
 \end{figure}

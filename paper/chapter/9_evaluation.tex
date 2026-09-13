@@ -4,34 +4,74 @@
 
 \subsection{问题三与问题四的配对结果}
 \begin{table}[H]\centering\small
-\caption{共同合成场景的策略比较}\label{tab:paired}
+\caption{问题三动态 $q_{10}$ 策略的指标分解}\label{tab:q3-diagnostics}
 \begin{tabular}{lrrrrr}
 \toprule
-方案 & 场景数 & 平均秒/源 & 平均路程(m) & 完整局数 & 相对基线 \\
+方案 & 平均总时间(s) & 平均秒/源 & 平均路程(m) & 测量次数 & 完整局数 \\
 \midrule
-q3 `adaptive` & 50 & 417.72 & -- & 50/50 & 基线 \\
-q3 `adaptive\_q10\_dynamic` & 50 & 333.75 & -- & 50/50 & -20.10\% \\
-q4 新26站+`adaptive` & 50 & 889.65 & 48374.14 & 50/50 & 基线 \\
-q4 `q4\_joint` & 50 & 694.93 & 34468.24 & 50/50 & -21.89\% \\
+\texttt{adaptive} & 5191.55 & 417.72 & 22593.65 & 103.20 & 50/50 \\
+\texttt{adaptive\_q10\_dynamic} & 4133.17 & 333.75 & 17159.45 & 108.88 & 50/50 \\
+\bottomrule
+\end{tabular}
+\source{results/synthetic/q3\_strategy\_comparison/runs.csv；50 个共同种子，完整局筛选；本地合成验证。}
+\end{table}
+
+表~\ref{tab:q3-diagnostics} 表明动态 $q_{10}$ 在平均多约 5.68 次测量的情况下，将路径长度减少约 5.43 km，总时间降低约 20.10\%。该对比中时间差主要体现为路程减少，测量次数反而略增，清除规模相同；两种方案均为 50/50 完整局。图~\ref{fig:q3-paired} 给出逐局配对和差值分布。
+
+\begin{table}[H]\centering\small
+\caption{问题四共同场景的覆盖与调度策略比较}\label{tab:q4-comparison}
+\begin{tabular}{lrrrrr}
+\toprule
+方案 & 场景数 & 平均秒/源 & 平均路程(m) & 完整局数 & 相对对应基线 \\
+\midrule
+新26站+\texttt{adaptive} & 50 & 889.65 & 48374.14 & 50/50 & 基线 \\
+新26站+\texttt{q4\_joint} & 50 & 695.69 & 35073.44 & 50/50 & -21.80\% \\
+\texttt{ring25}+\texttt{q4\_joint} & 50 & 587.22 & 28598.61 & 50/50 & -15.59\% \\
 \bottomrule
 \end{tabular}
 \end{table}
-\source{本地合成配对实验；固定共同源配置，scenario\_origin=local\_synthetic\_not\_official。}
+\source{本地合成配对实验；固定共同源配置；q4\_joint 行的相对值分别相对上一行或新26站 adaptive；scenario\_origin=local\_synthetic\_not\_official。}
+
+表~\ref{tab:q4-comparison} 和图~\ref{fig:q4-benchmark} 采用相同的完整局筛选规则；新增的环形策略逐局配对图见图~\ref{fig:q4-ring-result}。
+
+\begin{table}[H]\centering\small
+\caption{25 站环形联合策略的运行指标分解}\label{tab:q4-diagnostics}
+\begin{tabular}{lrrrrr}
+\toprule
+指标 & 平均值 & 中位数 & 最小值 & 最大值 & 单位 \\
+\midrule
+总虚拟时间 & 7667.68 & 7602.46 & 6955.68 & 9074.59 & s \\
+平均清除时间 & 587.22 & 550.25 & 471.25 & 790.74 & s/源 \\
+移动距离 & 28598.61 & 28041.75 & 25853.42 & 35012.95 & m \\
+兜底动作 & 7.58 & 0 & 0 & 109 & 次 \\
+测量次数 & 314.64 & 304 & 246 & 393 & 次 \\
+\bottomrule
+\end{tabular}
+\source{results/synthetic/q4_optimization_ring25/runs.csv；ring25\_q4\_joint，50 个共同种子；全部为本地合成验证。}
+\end{table}
+
+表~\ref{tab:q4-diagnostics} 将平均秒/源拆成总时间、移动、测量和兜底动作几个可审计量。总时间和距离的均值与中位数接近；兜底动作呈长尾，少数局达到 109 次，提示末端清除仍是进一步压缩时间的主要入口。该表只描述当前构造场景，不能外推到官方隐藏场景。
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}[y=0.009cm,x=1cm]
 \draw[->] (0,0)--(5.4,0) node[right] {策略};\draw[->] (0,0)--(0,1000) node[above] {秒/源};
 \fill[gray!50] (0.6,0) rectangle (1.4,417.72);\fill[blue!55] (1.8,0) rectangle (2.6,333.75);
-\fill[gray!50] (3.0,0) rectangle (3.8,889.65);\fill[green!55] (4.2,0) rectangle (5.0,694.93);
-\node[below] at (1,0) {q3基};\node[below] at (2.2,0) {q3动};\node[below] at (3.4,0) {q4基};\node[below] at (4.6,0) {q4联};
-\node[above] at (1,440) {417.72};\node[above] at (2.2,356) {333.75};\node[above] at (3.4,912) {889.65};\node[above] at (4.6,718) {694.93};
+\fill[gray!50] (3.0,0) rectangle (3.8,889.65);\fill[green!55] (4.2,0) rectangle (5.0,695.69);\fill[blue!65] (5.4,0) rectangle (6.2,587.22);
+\node[below] at (1,0) {q3基};\node[below] at (2.2,0) {q3动};\node[below] at (3.4,0) {q4基};\node[below] at (4.6,0) {q4三};\node[below] at (5.8,0) {q4环};
+\node[above] at (1,440) {417.72};\node[above] at (2.2,356) {333.75};\node[above] at (3.4,912) {889.65};\node[above] at (4.6,718) {695.69};\node[above] at (5.8,612) {587.22};
 \end{tikzpicture}
-\caption{本地合成配对实验的平均秒/源}\label{fig:benchmark}
-\source{results/synthetic/q3\_strategy\_comparison/summary.json 与 q4\_optimization/summary.json。}
+\caption{本地合成配对实验的平均秒/源}\label{fig:q4-benchmark}
+\source{results/synthetic/q3\_strategy\_comparison/summary.json、q4\_optimization/summary.json 与 q4\_optimization\_ring25/summary.json。}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.78\linewidth]{figures/result_q4_ring25.png}
+\caption{25站环形联合策略与26站三角联合策略的逐局配对比较}\label{fig:q4-ring-result}
+\source{results/synthetic/q4_optimization_ring25/runs.csv；50个共同种子，本地合成实验。}
 \end{figure}
 
 \subsection{官方演练与正式数据边界}
-官方演练历史记录共 7 局，92/92 个源清除且完成证书成立。三局问题三的每源虚拟时间为 $368.57$、$406.26$、$395.72\,\mathrm s$；三局历史三角方案问题四为 $1045.72$、$1086.38$、$850.42\,\mathrm s/源$。另有一局方格方案为 $1174.51\,\mathrm s/源$。25 局问题三策略组演练全部完整，但策略组使用不同隐藏场景，不能用于无偏排序。\textbf{正式测试结果：待正式测试后填入，当前不作成绩或奖项推断。}
+官方演练历史记录共 7 局，92/92 个源清除且完成证书成立。三局问题三的每源虚拟时间为 $368.57$、$406.26$、$395.72\,\mathrm s$；三局历史三角方案问题四为 $1045.72$、$1086.38$、$850.42\,\mathrm s/源$。另有一局方格方案为 $1174.51\,\mathrm s/源$。25 局问题三策略组演练全部完整，但策略组使用不同隐藏场景，不能用于无偏排序。图~\ref{fig:q4-official} 只用于呈现这些演练记录，\textbf{正式测试结果：待正式测试后填入，当前不作成绩或奖项推断。}
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}[x=0.65cm,y=0.01cm]
@@ -39,11 +79,11 @@ q4 `q4\_joint` & 50 & 694.93 & 34468.24 & 50/50 & -21.89\% \\
 \foreach \x/\v in {1/368.57,2/406.26,3/395.72,4/1174.51,5/1045.72,6/1086.38,7/850.42}{\fill[gray!60] (\x-0.22,0) rectangle (\x+0.22,\v);\node[above,rotate=60,font=\scriptsize] at (\x,\v+15) {\v};}
 \foreach \x/\t in {1/q3,2/q3,3/q3,4/q4方,5/q4三,6/q4三,7/q4三}{\node[below,font=\scriptsize] at (\x,-55) {\t};}
 \end{tikzpicture}
-\caption{官方演练单局每源时间（不等同正式成绩）}\label{fig:official}
+\caption{官方演练单局每源时间（不等同正式成绩）}\label{fig:q4-official}
 \source{results/practice/summary.csv；官方演练，非正式测试。}
 \end{figure}
 
 \subsection{敏感性、优点和限制}
-将问题四最终清除顺序由最近邻改为开放路径 2-opt，在 50 局配对实验中把均值从 $708.15$ 降至 $697.90\,\mathrm s/源$，37/50 局获胜。将中途未收敛目标的光学回退延后到末端，是减少无效清除尝试的主要原因。相反，限制未知频道只扫描前 10--12 个站点虽可得到约 $674\,\mathrm s/源$，但完整清除率仅约 70\%，因此排除在主线之外。
+在同一批 50 个共同源配置上，25 站环形剖分与 26 站三角联合策略相比，平均每源时间由 $695.69$ 降至 $587.22\,\mathrm s/源$，49/50 局更快；平均移动距离由 $35.07$ km 降至 $28.60$ km。该改动与将光学回退从覆盖阶段延后到末端相符，但现有结果同时改变了覆盖和调度参数，因果贡献仍需单因素消融确认。相反，限制未知频道只扫描前 10--12 个站点虽可降低部分局的时间，但完整清除率不足，因而排除在主线之外。
 
-当前方案的优点是证书清晰、状态可审计、接口动作串行且有有限兜底；限制是网格和候选点仍是启发式构造，官方隐藏分布、正式评分函数和网络环境尚未被独立验证。$400\,\mathrm s/源$ 目标在严格完成 26 站覆盖和 20 频道排查的协议下受到移动与扫描下界约束，不能靠局部调参保证达到；后续可将覆盖站位置、目标和测向点放入同一滚动巡回模型，并用正式演练数据重新校准。
+当前方案的优点是证书清晰、状态可审计、接口动作串行且有有限兜底；限制是环形网格和候选点仍是启发式构造，官方隐藏分布、正式评分函数和网络环境尚未被独立验证。$400\,\mathrm s/源$ 目标在严格完成 25 站覆盖和 20 频道排查的协议下受到移动与扫描下界约束，不能靠局部调参保证达到；后续可将覆盖站位置、目标和测向点放入同一滚动巡回模型，并用正式演练数据重新校准。

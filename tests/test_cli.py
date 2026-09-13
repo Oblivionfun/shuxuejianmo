@@ -58,6 +58,8 @@ def test_practice_records_installed_sources_without_network(monkeypatch, tmp_pat
     monkeypatch.setattr(practice, "CoveragePolicy", FakePolicy)
     assert practice.main() == 0
     assert captured["strategy"] == "q4_joint"
+    assert captured["coverage"] == "ring25"
+    assert captured["known_measure_budget"] == 3
     provenance = json.loads((output / "provenance.json").read_text(encoding="utf-8"))
     package = Path(practice.__file__).parent
     assert set(provenance["sha256"]) == {p.name for p in package.glob("*.py")}

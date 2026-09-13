@@ -22,15 +22,16 @@ $$T=L/5+N_{\mathrm{switch}}+5N_{\mathrm{measure}}+3N_{\mathrm{clear\ attempt}}+2
 
 ## q4 最新联合巡回配对实验
 
-最新脚本 [`benchmark_q4_optimization.py`](../scripts/benchmark_q4_optimization.py) 在 50 个共同源配置上配对比较旧 28 站基线、新 26 站局部基线和 `q4_joint`。结果文件见 [`q4_optimization/runs.csv`](../results/synthetic/q4_optimization/runs.csv) 与 [`q4_optimization/summary.json`](../results/synthetic/q4_optimization/summary.json)。
+最新脚本 [`benchmark_q4_optimization.py`](../scripts/benchmark_q4_optimization.py) 在 50 个共同源配置上配对比较旧 28 站基线、新 26 站联合策略和 25 站 `ring25` 联合策略。结果文件见 [`q4_optimization_ring25/runs.csv`](../results/synthetic/q4_optimization_ring25/runs.csv) 与 [`q4_optimization_ring25/summary.json`](../results/synthetic/q4_optimization_ring25/summary.json)。
 
 | 方案 | 平均秒/源 | 平均总虚拟秒 | 平均距离 (m) | 平均兜底动作 |
 | :--- | ---: | ---: | ---: | ---: |
 | 旧 28 站 + `adaptive` | 889.50 | 11642.97 | 48464.83 | 60.18 |
 | 新 26 站 + `adaptive` | 889.65 | 11566.29 | 48374.14 | 60.62 |
-| 新 26 站 + 当前 `q4_joint` | **694.93** | **9057.93** | **34468.24** | **10.30** |
+| 新 26 站 + 当前 `q4_joint` | 695.69 | 9077.43 | 35073.44 | 15.58 |
+| **新 25 站环形 + `q4_joint`** | **587.22** | **7667.68** | **28598.61** | **7.58** |
 
-三种方案的 150 局均完成覆盖证书、全部清除并正常退出；当前 `q4_joint` 在 50 局中有 48 局优于新基线，平均降低 21.89%。这些是本地合成配对证据，不是官方成绩。
+四种方案的 200 局均完成覆盖证书、全部清除并正常退出；25 站环形策略在 49/50 局优于 26 站联合策略，平均降低 15.59%。这些是本地合成配对证据，不是官方成绩。
 
 ## 官方演练：7 局，92/92 清除
 
@@ -62,7 +63,7 @@ $$T=L/5+N_{\mathrm{switch}}+5N_{\mathrm{measure}}+3N_{\mathrm{clear\ attempt}}+2
 
 - q1 的边长 39 m 等边三角形有直径 39 m、最小包围圆半径约 22.5167 m，构成“直径 ≤ 40 m 就能一次清除”的反例。
 - q2 在三个路程权重下考察 6 个距离 × 3 个首次误差 × 3 个第二次误差；有限组合用于核验选点代理，不构成连续空间最优性证明。
-- q3 七站保证全向源距至少一站 ≤ 900 m；q4 当前构造使用 33 个闭三角形、25 个网格顶点，加原点共 26 站；历史 28 站构造仍可通过 `triangular_legacy` 复现，26 也不是已证明的最少站点数。
+- q3 七站保证全向源距至少一站 ≤ 900 m；q4 当前 `ring25` 构造使用 32 个闭三角形、24 个环形顶点，加原点共 25 站；26 站构造仍可通过 `triangular` 复现，历史 28 站构造仍可通过 `triangular_legacy` 复现，25 也不是已证明的最少站点数。
 - 106 个合成运行说明给定场景下的完整性；7 局演练说明这些案例的接口表现。二者都不能映射为奖项、总体成功率或领先其他队伍的比例。
 
 六局跨平台离线反馈重放逐动作一致；一局在约 25 m 等距光学格子发生浮点排序差异，但集合相同，已记录为非阻塞差异。下一步优先优化移动路径和定向源的兜底开销。

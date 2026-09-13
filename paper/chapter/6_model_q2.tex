@@ -16,9 +16,18 @@ h_i(g)=\frac{1}{\|g-p_i\|^2}\bigl(-(g_y-p_{iy}),\;g_x-p_{ix}\bigr).
 U(q,g)=\varepsilon_{\rm api}\sum_j\|H^+_{:,j}\|_2,\qquad
 S(q)=Q_{\alpha}\{U(q,g):g\in\mathcal G\}+\lambda\|q-p_{\rm cur}\|.
 \end{equation}
-其中 $\mathcal G$ 由外包多边形顶点、边中点、中心和近边界采样组成。$U$ 只用于排序，最终清除仍由式 \eqref{eq:clear-cert} 认证。
+其中 $\mathcal G$ 由外包多边形顶点、边中点、中心和近边界采样组成。该线性化信息量的使用与主动测角定位和有界测角误差研究的思路一致\cite{tokekar2012,tokekar2013,dogancay,cmu}；$U$ 只用于排序，最终清除仍由式 \eqref{eq:clear-cert} 认证。
 
-当前策略在首次主动点使用较大移动权重，先获取第二条独立几何约束；后续阶段使用 $\alpha=0.10$ 的分位数目标和 $\lambda=0.02$。作为消融，保留最坏值、$\alpha=0.25$、中位数和更细角度候选。
+当前问题二的通用保守基线取 $Q_\alpha=\max$；问题三和问题四的在线入口再把同一候选函数切换为 $q_{10}$，以减少远端极端样本对滚动决策的牵引。当前策略在首次主动点使用较大移动权重，先获取第二条独立几何约束；后续阶段使用 $\alpha=0.10$ 的分位数目标和 $\lambda=0.02$。作为消融，保留最坏值、$\alpha=0.25$、中位数和更细角度候选。
+
+候选筛选的几何含义如图~\ref{fig:q2-candidate} 所示：先保留可能接收的区域，再在移动代价和信息收益之间排序，而不是直接把评分最高点当作清除点。
+
+\subsection{候选生成、排序与后验复核}
+候选点由当前外包的中心、顶点、边中点以及按角度均匀采样的边界点组成。先用式 \eqref{eq:safe} 删除对任意顶点都可能超过接收半径的点，再对剩余点按式~\eqref{eq:score} 计算 $S(q)$。对每一个候选点，算法把假定位置从外包顶点、边中点和中心取样，得到一组 $U(q,g)$；分位数项反映典型几何退化，移动项则把远距离点的代价直接纳入排序。首次主动测向提高 $\lambda$，避免在信息尚未充分时绕行；第二次以后降低移动权重，让角度基线成为主要收益来源。
+
+候选排序只是决策启发式，不能替代可行性证明。选定 $q$ 后，程序重新调用半平面交求解器，把实际返回的示向度和误差界加入当前集合；只有新的最小包围圆满足式 \eqref{eq:clear-cert} 才允许清除。若候选集合离散为空，保留风险标记并转入后验核验，而不是把离散结果当成物理无解。这样，候选点的“快”与最终清除的“安全”分别由 $S(q)$ 和 $R^*$ 两条证据链承担。
+
+从实现角度看，设当前外包有 $v$ 个顶点、候选点数为 $m$、假定位置样本数为 $s$，一次排序的主要代价为 $O(ms)$ 次小规模伪逆计算；半平面交和最小包围圆只对选中的点执行。该规模远小于把连续区域直接网格化，因此适合在每次反馈后滚动重算。
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}[x=1cm,y=1cm]
@@ -28,6 +37,14 @@ S(q)=Q_{\alpha}\{U(q,g):g\in\mathcal G\}+\lambda\|q-p_{\rm cur}\|.
 \draw[->,blue] (0.2,0)--(1.6,0.58) node[midway,above] {$S(q)$};
 \node at (0,-2.65) {候选点同时受接收、信息和路程约束};
 \end{tikzpicture}
-\caption{问题二候选点的筛选与排序示意}\label{fig:q2candidate}
+\caption{问题二候选点的筛选与排序示意}\label{fig:q2-candidate}
 \source{候选生成逻辑；点位为示意。}
+\end{figure}
+
+候选排序还需要用后验几何量复核。图~\ref{fig:q2-posterior} 将不同源距、首次误差和第二次误差组合下的后验半径同时画出：左图保留每个误差组合的原始点，右图按源距汇总离散分布。随着源距增大，角度误差在位置域的放大效应更加明显，因此排序时不能只看当前位置的移动距离。
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.98\linewidth]{figures/result_q2_posterior.png}
+\caption{问题二后验包围半径的误差组合与源距分布}\label{fig:q2-posterior}
+\source{results/synthetic/q2_validation.csv；54 个确定性组合，本地验证。}
 \end{figure}

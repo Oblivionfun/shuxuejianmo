@@ -17,6 +17,7 @@ VARIANTS = {
     "legacy_adaptive": ("triangular_legacy", "adaptive", 0.02),
     "optimized_adaptive": ("triangular", "adaptive", 0.02),
     "optimized_q4_joint": ("triangular", "q4_joint", 0.02),
+    "ring25_q4_joint": ("ring25", "q4_joint", 0.02),
 }
 
 
@@ -82,6 +83,13 @@ def main() -> int:
         "joint_reduction_vs_legacy_percent": float(
             100
             * (1 - pivot["optimized_q4_joint"].mean() / pivot["legacy_adaptive"].mean())
+        ),
+        "ring25_wins_vs_triangular_joint": int(
+            (pivot["ring25_q4_joint"] < pivot["optimized_q4_joint"]).sum()
+        ),
+        "ring25_reduction_vs_triangular_joint_percent": float(
+            100
+            * (1 - pivot["ring25_q4_joint"].mean() / pivot["optimized_q4_joint"].mean())
         ),
         "interpretation": "paired synthetic ablation only; no official score claim",
     }

@@ -22,8 +22,8 @@ def main():
     parser.add_argument("--question", type=int, choices=[3, 4], required=True)
     parser.add_argument(
         "--coverage",
-        choices=["triangular", "triangular_legacy", "square"],
-        default="triangular",
+        choices=["ring25", "triangular", "triangular_legacy", "square"],
+        default="ring25",
         help="question 4 coverage; question 3 always uses seven stations",
     )
     parser.add_argument("--base-url", default="http://127.0.0.1:2026")
@@ -71,7 +71,7 @@ def main():
         "coverage": args.coverage if args.question == 4 else "seven",
         "strategy": strategy,
         "travel_weight": weight,
-        "known_measure_budget": 4 if strategy == "q4_joint" else None,
+        "known_measure_budget": 3 if strategy == "q4_joint" else None,
         "localize_threshold_m": 300.0 if strategy == "q4_joint" else None,
         "q4_objective": "q10" if strategy == "q4_joint" else None,
         "q4_final_order": "tsp" if strategy == "q4_joint" else None,
@@ -93,7 +93,7 @@ def main():
         strategy=strategy,
         travel_weight=weight,
         coverage=args.coverage,
-        known_measure_budget=4,
+        known_measure_budget=3,
         localize_threshold_m=300.0,
         q4_objective="q10",
         q4_final_order="tsp",

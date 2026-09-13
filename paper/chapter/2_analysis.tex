@@ -2,6 +2,8 @@
 \subsection{几何信息的保守表达}
 若检测点为 $p_i=(x_i,y_i)$、示向度为 $\theta_i$，则真实源点 $g$ 位于以 $p_i$ 为顶点、方向 $\theta_i$ 为中心的误差楔形内。将每个楔形写成两个线性不等式后，多次观测的交集仍为凸集。接收半径 $R\in[1000,1500]\,\mathrm m$ 形成圆盘边界；实现以外切正多边形包围圆盘，宁可保留少量不可能点，也不因离散化排除真实点。
 
+图~\ref{fig:q1-wedge} 给出单次反馈的几何解释：楔形只限制方向，接收圆盘才提供距离上界；两者取交后仍是一个可计算的保守外包。
+
 \subsection{时间和风险的分解}
 题面虚拟时间按
 \begin{equation}\label{eq:time}
@@ -20,6 +22,6 @@ T=\frac{L}{5}+N_{\rm sw}+5N_{\rm mea}+3N_{\rm clr}+2N_{\rm suc}
 \draw[dashed] (0,0)--(2.3,0) node[midway,below] {$R$};\fill (1.7,1.15) circle (2pt) node[above right] {$p_i$};
 \node at (0,-2.55) {测向楔形与接收圆盘的外包};
 \end{tikzpicture}
-\caption{单次测向反馈的几何约束}\label{fig:wedge}
+\caption{单次测向反馈的几何约束}\label{fig:q1-wedge}
 \source{根据题面误差界绘制；坐标仅作示意。}
 \end{figure}

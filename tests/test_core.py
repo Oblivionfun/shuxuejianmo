@@ -17,7 +17,7 @@ from cumcm_b.geometry import (
 )
 from cumcm_b.synthetic import Source, SyntheticArena, generate_sources
 from cumcm_b.protocol import RobotClient, ProtocolError, HttpTransport
-from cumcm_b.policy import CoveragePolicy, q4_station_route, stations, triangular_cover
+from cumcm_b.policy import CoveragePolicy, q4_station_route, ring25_cover, stations, triangular_cover
 
 
 def triangle_observations(side=39.0):
@@ -131,6 +131,36 @@ def test_q4_route_visits_each_optimized_station_once():
     points = stations(4)
     route = q4_station_route(points)
     assert len(route) == 26
+    assert {tuple(x) for x in route} == {tuple(x) for x in points}
+
+
+def test_ring25_cover_is_a_continuous_disk_certificate():
+    from shapely.geometry import MultiPoint, Point, Polygon
+    from shapely.ops import unary_union
+
+    points, cells = ring25_cover()
+    assert len(points) == 25 and len(cells) == 32
+    assert max(np.linalg.norm(t[:, None] - t[None, :], axis=2).max() for t in cells) <= 1000 + 1e-7
+    cover = unary_union([Polygon(t) for t in cells])
+    assert cover.contains(Point(0, 0))
+    assert cover.boundary.distance(Point(0, 0)) >= 1800 - 1e-7
+    rng = np.random.default_rng(20260913)
+    theta = rng.uniform(0, 2 * np.pi, 500)
+    sample = np.vstack(
+        (
+            1800 * np.sqrt(rng.random(500))[:, None] * np.column_stack((np.cos(theta), np.sin(theta))),
+            [1800 * unit(t) for t in np.linspace(0, 2 * np.pi, 721)],
+        )
+    )
+    for g in sample:
+        near = points[np.linalg.norm(points - g, axis=1) <= 1000 + 1e-8]
+        assert MultiPoint(near).convex_hull.buffer(1e-7).covers(Point(g))
+
+
+def test_q4_ring25_route_visits_each_station_once():
+    points = stations(4, "ring25")
+    route = q4_station_route(points)
+    assert len(route) == 25
     assert {tuple(x) for x in route} == {tuple(x) for x in points}
 
 

@@ -14,6 +14,12 @@ from .protocol import BudgetExpired, ProtocolError
 
 Q4_TRIANGLE_SIDE_M = 995.0
 Q4_TRIANGLE_OFFSET = (0.23, 0.90)
+# A 16-sided outer ring and an 8-sided inner ring cover the same disk with
+# fewer long excursions than the triangular lattice.  The 1 m outer margin
+# avoids relying on a floating-point point exactly on the 1800 m boundary;
+# the 997 m inner radius keeps every certificate triangle below 1000 m.
+Q4_RING25_INNER_RADIUS_M = 997.0
+Q4_RING25_OUTER_MARGIN_M = 1.0
 Q4_TRIANGULAR_ROUTE_ORDER = (
     0,
     16,
@@ -41,6 +47,33 @@ Q4_TRIANGULAR_ROUTE_ORDER = (
     12,
     7,
     6,
+)
+Q4_RING25_ROUTE_ORDER = (
+    0,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    16,
+    15,
+    14,
+    13,
+    12,
+    11,
+    10,
+    9,
+    8,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1,
 )
 
 
@@ -81,11 +114,61 @@ def legacy_triangular_cover():
     return points.copy(), cells.copy()
 
 
+@lru_cache(maxsize=4)
+def _ring25_geometry(
+    inner_radius=Q4_RING25_INNER_RADIUS_M,
+    outer_margin=Q4_RING25_OUTER_MARGIN_M,
+):
+    """Build a 25-station concentric triangulation of the 1800 m disk.
+
+    Sixteen outer vertices form a circumscribed polygon.  Eight inner
+    vertices sit at the odd outer angles, so each 45 degree annulus sector is
+    split into three triangles and the inner octagon into eight triangles.
+    The construction is deliberately explicit: the returned cells are used
+    by tests to check the distance and convex-combination certificates.
+    """
+    inner_radius = float(inner_radius)
+    outer_radius = 1800.0 / math.cos(math.pi / 16) + float(outer_margin)
+    outer_theta = np.arange(16) * 2 * math.pi / 16
+    inner_theta = (np.arange(8) * 2 + 1) * 2 * math.pi / 16
+    outer = np.column_stack((outer_radius * np.cos(outer_theta), outer_radius * np.sin(outer_theta)))
+    inner = np.column_stack((inner_radius * np.cos(inner_theta), inner_radius * np.sin(inner_theta)))
+
+    cells = []
+    for k in range(8):
+        i, j, ell = 2 * k + 1, (2 * k + 2) % 16, (2 * k + 3) % 16
+        nxt = (k + 1) % 8
+        # The three triangles tile the annulus between two consecutive inner
+        # vertices and the intervening three outer vertices.
+        cells.extend(
+            (
+                np.array([outer[i], outer[j], inner[k]]),
+                np.array([outer[j], inner[nxt], inner[k]]),
+                np.array([outer[j], outer[ell], inner[nxt]]),
+            )
+        )
+    for k in range(8):
+        cells.append(np.array([[0.0, 0.0], inner[k], inner[(k + 1) % 8]]))
+    points = np.vstack(([0.0, 0.0], outer, inner))
+    return points, np.asarray(cells)
+
+
+def ring25_cover():
+    points, cells = _ring25_geometry()
+    return points.copy(), cells.copy()
+
+
 def q4_station_route(points):
-    """Return the deterministic open route used by the optimized triangular q4 policy."""
+    """Return the deterministic open route for the supported q4 station sets.
+
+    The ring25 order is precomputed offline from a nearest-neighbour plus 2-opt
+    search and then fixed here so official practice runs are reproducible.
+    """
     points = np.asarray(points, float)
     if len(points) == len(Q4_TRIANGULAR_ROUTE_ORDER):
         return points[list(Q4_TRIANGULAR_ROUTE_ORDER)].copy()
+    if len(points) == len(Q4_RING25_ROUTE_ORDER):
+        return points[list(Q4_RING25_ROUTE_ORDER)].copy()
     return points.copy()
 
 
@@ -97,6 +180,8 @@ def stations(question, coverage="triangular"):
             return triangular_cover()[0]
         if coverage == "triangular_legacy":
             return legacy_triangular_cover()[0]
+        if coverage == "ring25":
+            return ring25_cover()[0]
         if coverage != "square":
             raise ValueError("unknown q4 coverage")
         grid = []
@@ -128,7 +213,7 @@ class CoveragePolicy:
         dynamic_first_weight=0.50,
         dynamic_later_weight=0.02,
         candidate_angle_step=22.5,
-        known_measure_budget=4,
+        known_measure_budget=3,
         localize_threshold_m=300.0,
         q4_objective="q10",
         defer_q4_localization=True,
@@ -308,10 +393,11 @@ class CoveragePolicy:
         """Clear a discovered target when its certified center is near the route."""
         if self.strategy != "q4_joint":
             return
+        processed = set()
         while True:
             candidates = []
             for k, track in self.tracks.items():
-                if not track.seen or track.cleared:
+                if not track.seen or track.cleared or k in processed:
                     continue
                 center, _ = enclosing_circle(track.belief.polygon)
                 distance = float(np.linalg.norm(center - self.client.position))
@@ -321,6 +407,10 @@ class CoveragePolicy:
                 return
             _, channel = min(candidates)
             self.localize(channel, allow_fallback=False)
+            processed.add(channel)
+            # A deferred fallback does not add an observation.  Marking the
+            # channel as processed prevents an endless retry loop when the
+            # same target remains near the route but cannot yet be certified.
 
     def _next_known_channel(self):
         """Select the next discovered target for the final clearing pass."""
@@ -373,7 +463,10 @@ class CoveragePolicy:
         started = time.monotonic()
         self.client.action("/enter")
         points = stations(self.question, self.coverage)
-        if self.strategy == "q4_joint" and self.question == 4 and self.coverage == "triangular":
+        if self.strategy == "q4_joint" and self.question == 4 and self.coverage in {
+            "triangular",
+            "ring25",
+        }:
             points = q4_station_route(points)
         pending = list(range(len(points)))
         self.coverage_station_index = 0
