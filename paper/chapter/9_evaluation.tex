@@ -47,7 +47,7 @@
 测量次数 & 314.64 & 304 & 246 & 393 & 次 \\
 \bottomrule
 \end{tabular}
-\source{results/synthetic/q4_optimization_ring25/runs.csv；ring25\_q4\_joint，50 个共同种子；全部为本地合成验证。}
+\source{\nolinkurl{results/synthetic/q4_optimization_ring25/runs.csv}；ring25\_q4\_joint，50 个共同种子；全部为本地合成验证。}
 \end{table}
 
 表~\ref{tab:q4-diagnostics} 将平均秒/源拆成总时间、移动、测量和兜底动作几个可审计量。总时间和距离的均值与中位数接近；兜底动作呈长尾，少数局达到 109 次，提示末端清除仍是进一步压缩时间的主要入口。该表只描述当前构造场景，不能外推到官方隐藏场景。
@@ -79,13 +79,13 @@
 \node[above,text=ink] at (1,440) {417.72};\node[above,text=ink] at (2.2,356) {333.75};\node[above,text=ink] at (3.4,912) {889.65};\node[above,text=ink] at (4.6,718) {695.69};\node[above,text=ink] at (5.8,612) {587.22};
 \end{tikzpicture}
 \caption{本地合成配对实验的平均秒/源}\label{fig:q4-benchmark}
-\source{results/synthetic/q3\_strategy\_comparison/summary.json、q4\_optimization/summary.json 与 q4\_optimization\_ring25/summary.json。}
+\source{\nolinkurl{results/synthetic/q3_strategy_comparison/summary.json}、\nolinkurl{q4_optimization/summary.json} 与 \nolinkurl{q4_optimization_ring25/summary.json}。}
 \end{figure}
 
 \begin{figure}[H]\centering
 \includegraphics[width=0.78\linewidth]{figures/result_q4_ring25.png}
 \caption{25站环形联合策略与26站三角联合策略的逐局配对比较}\label{fig:q4-ring-result}
-\source{results/synthetic/q4_optimization_ring25/runs.csv；50个共同种子，本地合成实验。}
+\source{\nolinkurl{results/synthetic/q4_optimization_ring25/runs.csv}；50个共同种子，本地合成实验。}
 \end{figure}
 
 \subsection{官方演练与正式数据边界}
