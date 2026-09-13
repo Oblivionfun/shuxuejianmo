@@ -23,6 +23,26 @@
 
 表~\ref{tab:q1-tasks} 中的“输入”均指题目给出的规则和当前接口反馈，而非合成环境中的隐藏真值。程序把每个动作的请求、响应和虚拟时钟写入逐动作日志；论文中的数值只从这些日志或固定种子合成运行中读取。评价先看是否完成覆盖并清除全部源，再比较虚拟时间；若两者冲突，完整性优先。反馈驱动的决策循环见图~\ref{fig:q1-workflow}。
 
+\subsection{信息、动作与证据链}
+题目中的一次“测量”同时改变三类状态：机器狗位置、频道的可能区域以及虚拟时钟。为了避免把接口语义和隐藏真值混在一起，本文把运行记录拆成以下四类事件。每类事件都对应一个可回放字段，后续的图表只从这些字段计算，不在程序外手工改写。表~\ref{tab:q1-evidence} 给出了事件、状态更新和证据字段的对应关系。
+
+\begin{table}[H]\centering\small
+\caption{接口反馈到论文证据的映射}\label{tab:q1-evidence}
+\begin{tabular}{p{0.19\linewidth}p{0.34\linewidth}p{0.33\linewidth}}
+\toprule
+事件 & 在线状态更新 & 可核验输出 \\
+\midrule
+\texttt{direction} & 将带误差的楔形加入对应频道的 $\mathcal P_k$ & 示向度、测量点、更新后的 MEC \\
+\texttt{near} & 保留位置并允许同点清除 & 清除请求、成功标识、动作时间 \\
+\texttt{no\_signal} & 记录一次排查，不删除频道 & 频道、站点、响应和累计次数 \\
+网络/协议失败 & 不推进位置和虚拟时钟，使用同一请求标识重试 & 请求 ID、重试次数、最终响应 \\
+\bottomrule
+\end{tabular}
+\source{题面接口语义与 src/cumcm\_b/protocol.py 的日志字段。}
+\end{table}
+
+因此，论文中的“发现”只表示得到过有效方向或近距离反馈，“清除”只表示接口返回成功，“完成”还要求所有覆盖站访问结束并满足完成证书。三者不是同一个布尔量。这个区分尤其影响问题四：定向源在某个站点返回 \texttt{no\_signal} 只说明当前测量没有接收，不足以证明该频道为空；只有覆盖证书和后续定位证书共同成立，程序才允许退出。
+
 \subsection{建模主线}
 我们将每个频道的状态写成 $(\mathcal P_k,\,z_k,\,c_k)$：$\mathcal P_k$ 是由已有反馈保留下来的可能位置集合，$z_k$ 表示是否已发现，$c_k$ 表示是否已清除。一次 \texttt{direction} 反馈把一个带角度误差的楔形约束加入 $\mathcal P_k$；\texttt{near} 直接触发同位置清除；\texttt{no\_signal} 只更新测量记录，不擅自删除候选位置。每一次动作先通过协议客户端取得反馈，再更新对应状态，策略不读取隐藏源坐标。
 
@@ -30,11 +50,12 @@
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}[>=Latex,node distance=10mm]
-\node[draw,rounded corners,fill=gray!10,minimum width=30mm,minimum height=9mm] (a) {题面/接口反馈};
-\node[draw,rounded corners,fill=gray!10,minimum width=30mm,minimum height=9mm,right=of a] (b) {集合状态更新};
-\node[draw,rounded corners,fill=gray!10,minimum width=30mm,minimum height=9mm,right=of b] (c) {下一停靠点};
-\node[draw,rounded corners,fill=gray!10,minimum width=30mm,minimum height=9mm,right=of c] (d) {清除证书};
-\draw[->] (a)--(b);\draw[->] (b)--(c);\draw[->] (c)--(d);\draw[->,rounded corners] (d) |- ++(0,-12mm) -| (a);
+\node[flowbox,fill=paleBlue] (a) {题面/接口反馈};
+\node[flowbox,fill=paleTeal,right=of a] (b) {集合状态更新};
+\node[flowbox,fill=paleSand,right=of b] (c) {下一停靠点};
+\node[flowbox,fill=mist,right=of c] (d) {清除证书};
+\draw[flowline] (a)--(b);\draw[flowline] (b)--(c);\draw[flowline] (c)--(d);
+\draw[flowline,rounded corners] (d.south) |- ++(0,-12mm) -| (a.south);
 \end{tikzpicture}
 \caption{反馈驱动的在线决策循环}\label{fig:q1-workflow}
 \source{本文算法流程；不含隐藏真值。}

@@ -14,13 +14,32 @@ T=\frac{L}{5}+N_{\rm sw}+5N_{\rm mea}+3N_{\rm clr}+2N_{\rm suc}
 \subsection{实验设计与证据等级}
 本稿将证据分为三层。第一层是题面和几何推导，支撑“不会漏掉”的条件；第二层是 50 个共同源配置的本地合成配对实验，支撑策略间相对比较；第三层是用户在官方模拟器中手动选择演练得到的 7 局记录，支撑接口、计时、日志和完成证书。正式测试数据目前为空，表格中以“待替换”保留位置。所有本地随机场景、固定种子和官方演练均不写成正式成绩。
 
+为使策略比较可重复，所有本地配对实验先生成一份共同源配置，再把同一配置依次交给两种策略；每一行记录使用的覆盖构造、策略名、随机种子、源数量、完成证书、退出标志、总虚拟时间、路程、测量次数和兜底次数。只有同时满足完成证书和正常退出的运行才进入均值、 中位数和胜负统计。该口径排除了“提前停止而时间很低”的伪优结果，也保留了失败局的原因，便于后续单独分析。三类证据的用途和边界见表~\ref{tab:evidence-levels}。
+
+\begin{table}[H]\centering\small
+\caption{三类证据的使用边界}\label{tab:evidence-levels}
+\begin{tabular}{p{0.18\linewidth}p{0.31\linewidth}p{0.35\linewidth}}
+\toprule
+证据层级 & 用途 & 不能推出的结论 \\
+\midrule
+解析几何与题面规则 & 证明覆盖、误差外包和清除安全条件 & 不能推出平均耗时或奖项水平 \\
+共同种子本地实验 & 比较策略方向、识别长尾和参数敏感性 & 不能替代官方隐藏场景 \\
+官方演练日志 & 核验接口、计时、重试和完成证书 & 不能当作正式测试成绩 \\
+\bottomrule
+\end{tabular}
+\source{本文实验协议；所有结果均保留来源路径和时间戳。}
+\end{table}
+
+该证据分层也是本文结果章节的组织原则：解析结论放在模型章节，本地比较放在配对表和图中，官方演练单独列出并加注“非正式测试”。如果未来获得正式隐藏场景结果，只替换对应结果文件和表格行，不改变模型证明或本地实验的证据等级。
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}[x=1cm,y=1cm]
-\draw[->] (-3.4,0)--(3.6,0) node[right] {$x$};\draw[->] (0,-2.9)--(0,3.1) node[above] {$y$};
-\draw (0,0) circle (2.3);\draw[thick,->] (0,0)--(1.7,1.15) node[midway,above] {$\theta_i$};
-\draw[red!70!black,thick] (1.7,1.15)--(3.0,2.0);\draw[red!70!black,thick] (1.7,1.15)--(2.9,0.3);
-\draw[dashed] (0,0)--(2.3,0) node[midway,below] {$R$};\fill (1.7,1.15) circle (2pt) node[above right] {$p_i$};
-\node at (0,-2.55) {测向楔形与接收圆盘的外包};
+\draw[->,draw=linegray] (-3.4,0)--(3.6,0) node[right,text=ink] {$x$};\draw[->,draw=linegray] (0,-2.9)--(0,3.1) node[above,text=ink] {$y$};
+\draw[sketchline] (0,0) circle (2.3);\draw[thick,->,draw=navy] (0,0)--(1.7,1.15) node[midway,above,text=navy] {$\theta_i$};
+\fill[coral!18] (1.7,1.15)--(3.0,2.0)--(2.9,0.3)--cycle;
+\draw[thick,draw=coral] (1.7,1.15)--(3.0,2.0);\draw[thick,draw=coral] (1.7,1.15)--(2.9,0.3);
+\draw[dashed,draw=linegray] (0,0)--(2.3,0) node[midway,below,text=ink] {$R$};\fill[navy] (1.7,1.15) circle (2pt) node[above right,text=ink] {$p_i$};
+\node[text=ink] at (0,-2.55) {测向楔形与接收圆盘的外包};
 \end{tikzpicture}
 \caption{单次测向反馈的几何约束}\label{fig:q1-wedge}
 \source{根据题面误差界绘制；坐标仅作示意。}

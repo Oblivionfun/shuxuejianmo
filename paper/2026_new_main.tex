@@ -3,6 +3,24 @@
 \usepackage[left=24mm,right=24mm,top=22mm,bottom=22mm]{geometry}
 \usepackage{amsmath,amssymb,booktabs,graphicx,float,array,longtable,enumitem,xcolor,hyperref,listings,tikz}
 \usetikzlibrary{arrows.meta,positioning,calc}
+% 低饱和、高对比且可打印的统一图示配色；不依赖彩色才能区分信息。
+\definecolor{ink}{HTML}{263238}
+\definecolor{navy}{HTML}{365F7C}
+\definecolor{teal}{HTML}{4F7C82}
+\definecolor{sage}{HTML}{7D9A86}
+\definecolor{sand}{HTML}{C99653}
+\definecolor{coral}{HTML}{B9685D}
+\definecolor{mist}{HTML}{EEF3F4}
+\definecolor{paleBlue}{HTML}{E4EEF3}
+\definecolor{paleTeal}{HTML}{E6F0EE}
+\definecolor{paleSand}{HTML}{F5ECDD}
+\definecolor{linegray}{HTML}{9AA7AE}
+\tikzset{
+  flowbox/.style={draw=ink, line width=.45pt, rounded corners=2pt, minimum width=31mm, minimum height=9mm, align=center, inner sep=3pt, font=\small},
+  flowline/.style={-{Latex[length=2mm]}, draw=ink, line width=.55pt},
+  flowlabel/.style={font=\scriptsize, text=ink, fill=white, inner sep=1.5pt, align=center},
+  sketchline/.style={draw=ink, line width=.65pt},
+}
 \setmainfont{TeX Gyre Termes}
 \hypersetup{colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black}
 \ctexset{section={format=\centering\heiti\zihao{4},name={,、},number=\chinese{section},aftername=\quad},subsection={format=\heiti\zihao{-4},number=\arabic{section}.\arabic{subsection},aftername=\quad},subsubsection={format=\heiti\zihao{五号},number=\arabic{section}.\arabic{subsection}.\arabic{subsubsection},aftername=\quad}}

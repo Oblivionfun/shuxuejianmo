@@ -6,6 +6,8 @@ W_i=\{g:\operatorname{cross}(u(\theta_i-\varepsilon),g-p_i)\ge0,\quad \operatorn
 \end{equation}
 将式 \eqref{eq:wedge} 改写为 $A_i g\le b_i$，即可用线性规划检查空集和无界性；有界时枚举约束直线交点，再取凸包得到 $\mathcal P=\cap_iW_i$。与人为设置一个大正方形相比，该做法能明确返回 EMPTY、UNBOUNDED 或 BOUNDED 三种状态。
 
+\paragraph{外包性质。}每个 $W_i$ 是两个闭半平面的交，因而是闭凸集；有限个 $W_i$ 与接收圆盘外切多边形的交仍为闭凸集。由于真实源位置同时满足题面的误差界和接收条件，必有 $g_{\rm true}\in\mathcal P\subseteq\mathcal P_{\rm out}$。所以程序宁可保留外切多边形带来的少量冗余，也不在顶点离散时删除真实位置。这个包含关系是后续清除证书的逻辑起点：对外包区域成立的半径上界，才可以推出真实源点一定可清除。
+
 考虑接收区域时，程序将半径 $R$ 的圆盘替换为外切正 $K$ 边形，默认 $K=128$。其最大径向膨胀为 $R(\sec(\pi/K)-1)$，所以所得区域是安全外包，不把外包直径误写成曲边区域的精确直径。
 
 \subsection{直径与最小包围圆}
@@ -17,6 +19,8 @@ R^*(\mathcal P_{\rm out})\le 19.75\,\mathrm m
 
 \subsection{求解步骤与数值核验}
 实现先将所有楔形边界和接收圆盘外切多边形统一写成半平面约束，再枚举约束直线交点。落在全部半平面内的交点按极角排序形成凸多边形；若交点不足以形成有界区域，则分别返回空集或无界状态，不进入清除流程。对有界多边形，旋转卡壳给出直径，随机增量算法给出最小包围圆，并用“所有顶点到圆心的距离不超过半径”作最后复核。该流程把数值几何、清除判定和协议动作分开，便于定位误差来源。
+
+为避免几何求解器的单点故障，本文在三个位置做独立核验：第一，用顶点对穷举复核旋转卡壳的直径；第二，用全部顶点到 MEC 圆心的最大距离复核包围半径；第三，在每次清除前重新读取当前外包，而不沿用上一次测量后的缓存值。若三者任一不一致，运行记录标记为不可清除并转入下一次测量。这样，数值容差只会使算法更保守，不会把误差方向偏向“更容易清除”。
 
 \begin{table}[H]\centering\small
 \caption{问题一构造数据的逐步收缩核验}\label{tab:q1-shrink}
@@ -52,9 +56,9 @@ R^*=\frac{39}{\sqrt3}=22.5167\,\mathrm m>20\,\mathrm m.
 \begin{figure}[H]\centering
 \begin{tikzpicture}[scale=0.08]
 \coordinate (A) at (0,0);\coordinate (B) at (39,0);\coordinate (C) at (19.5,33.775);
-\draw[thick] (A)--(B)--(C)--cycle;\draw[dashed] (19.5,11.258) circle (22.517);
-\fill (19.5,11.258) circle (1.1);\draw[<->] (A)--(B) node[midway,below] {$39\,\mathrm m$};
-\node at (19.5,-9) {直径 $39$ 米，但包围圆半径 $22.52$ 米};
+\draw[thick,draw=ink] (A)--(B)--(C)--cycle;\draw[dashed,draw=coral] (19.5,11.258) circle (22.517);
+\fill[navy] (19.5,11.258) circle (1.1);\draw[<->,draw=navy] (A)--(B) node[midway,below,text=ink] {$39\,\mathrm m$};
+\node[text=ink] at (19.5,-9) {直径 $39$ 米，但包围圆半径 $22.52$ 米};
 \end{tikzpicture}
 \caption{问题一的等边三角形反例}\label{fig:q1-counter}
 \source{构造数据，数值来自 results/synthetic/q1.json。}
@@ -62,9 +66,9 @@ R^*=\frac{39}{\sqrt3}=22.5167\,\mathrm m>20\,\mathrm m.
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}[x=1cm,y=1cm]
-\draw[gray!60] (-3,-2.2) rectangle (3.2,2.4);\draw[thick] (-2.5,-1.5)--(2.4,-1.5)--(1.0,1.8)--cycle;
-\draw[dashed] (0.0,0.1) circle (1.35);\fill (0,0.1) circle (1.5pt);
-\node at (0,-2.7) {楔形交集 $\mathcal P$ 与最小包围圆};
+\draw[draw=linegray] (-3,-2.2) rectangle (3.2,2.4);\fill[paleBlue] (-2.5,-1.5)--(2.4,-1.5)--(1.0,1.8)--cycle;\draw[thick,draw=navy] (-2.5,-1.5)--(2.4,-1.5)--(1.0,1.8)--cycle;
+\draw[dashed,draw=coral] (0.0,0.1) circle (1.35);\fill[navy] (0,0.1) circle (1.5pt);
+\node[text=ink] at (0,-2.7) {楔形交集 $\mathcal P$ 与最小包围圆};
 \end{tikzpicture}
 \caption{多次测向逐步收缩可能区域的示意}\label{fig:q1-mec}
 \source{几何示意图；实际算法使用外切圆盘和凸多边形顶点。}

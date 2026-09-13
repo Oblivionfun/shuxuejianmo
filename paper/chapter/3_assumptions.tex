@@ -8,14 +8,35 @@
 
 以上假设直接服务于题面规则。圆盘外切多边形的边数、候选角度间隔、路程权重和覆盖网格属于算法参数，不当作物理事实。合成实验采用圆域均匀源位置、$N\in\{10,\ldots,16\}$ 和频道无放回抽样，仅用于可重复比较；官方模拟器的隐藏分布未知。
 
+为了区分“必须满足的约束”和“可以做敏感性分析的选择”，本文对假设作如下风险标记。高风险项在正式演练中只记录证据，不用本地经验替代题面定义；可调项则在相同种子下成对比较。具体核验方式和不成立时的处理见表~\ref{tab:q1-assumption-risk}。
+
+\begin{table}[H]\centering\small
+\caption{假设的核验方式与风险标记}\label{tab:q1-assumption-risk}
+\begin{tabular}{p{0.26\linewidth}p{0.28\linewidth}p{0.29\linewidth}}
+\toprule
+假设/参数 & 核验方式 & 若不成立的处理 \\
+\midrule
+源静止、单频道至多一个源 & 题面规则；日志只记录频道状态 & 不在状态机中合并不同频道目标 \\
+误差界 $1^\circ$ 与 API 舍入 & 使用 $1.01^\circ$ 外包并记录原始角度 & 增大外包，不用点估计替代 \\
+接收半径与清除半径 & 题面数值；每次清除前复算 MEC & 判定失败则继续测量或兜底 \\
+覆盖网格、分位数和路程权重 & 固定种子配对敏感性实验 & 只保留完成率不下降的参数 \\
+\bottomrule
+\end{tabular}
+\source{题面约束、代码参数和本地验证协议。}
+\end{table}
+
+这张表的作用是防止把“合成分布表现良好”倒推成“隐藏场景一定满足同样分布”。例如，$1.01^\circ$ 是为接口两位小数保留的数值余量，而不是对真实传感器精度的重新估计；25 站环形覆盖则是一个可证明的构造，不代表官方评分函数必然偏好最少站点。正式测试时，若接口返回与假设不一致，应优先保留原始响应并停止对应的强结论。
+
 图~\ref{fig:q1-assumption} 将三类信息分开：题面事实决定可行域和接口，算法参数决定实现细节，合成分布只用于策略间的相对比较。
 
 \begin{figure}[H]\centering
-\begin{tikzpicture}[>=Latex]
-\node[draw,rounded corners,fill=blue!8,minimum width=31mm,minimum height=9mm] (a) at (0,0) {题面事实};
-\node[draw,rounded corners,fill=green!8,minimum width=31mm,minimum height=9mm] (b) at (4,0) {实现参数};
-\node[draw,rounded corners,fill=orange!12,minimum width=31mm,minimum height=9mm] (c) at (2,-1.6) {实验分布};
-\draw[->] (a)--(b) node[midway,above] {固定约束};\draw[->] (a)--(c);\draw[->] (b)--(c) node[midway,right] {仅用于比较};
+\begin{tikzpicture}[>=Latex, node distance=16mm and 22mm]
+\node[flowbox,fill=paleBlue] (a) {题面事实};
+\node[flowbox,fill=paleTeal,right=of a] (b) {实现参数};
+\node[flowbox,fill=paleSand,below=15mm of $(a)!0.5!(b)$] (c) {实验分布};
+\draw[flowline] (a.east) -- node[flowlabel,above=2.5pt] {固定约束} (b.west);
+\draw[flowline] (a.south east) -- (c.north west);
+\draw[flowline] (b.south west) -- node[flowlabel,right=1pt] {仅用于比较} (c.north east);
 \end{tikzpicture}
 \caption{假设、实现参数和实验分布的边界}\label{fig:q1-assumption}
 \source{本文分层记录。}

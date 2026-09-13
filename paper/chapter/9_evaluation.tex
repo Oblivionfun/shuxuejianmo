@@ -52,13 +52,31 @@
 
 表~\ref{tab:q4-diagnostics} 将平均秒/源拆成总时间、移动、测量和兜底动作几个可审计量。总时间和距离的均值与中位数接近；兜底动作呈长尾，少数局达到 109 次，提示末端清除仍是进一步压缩时间的主要入口。该表只描述当前构造场景，不能外推到官方隐藏场景。
 
+为了呈现均值之外的波动，表~\ref{tab:q4-quartiles} 报告 25 站方案的四分位数。总虚拟时间的中间 50\% 运行落在 $7446.52$--$7822.57\,\mathrm s$，而兜底动作的上四分位数为 $2.75$ 次、90\% 分位数为 $22.80$ 次，说明时间长尾主要来自少数频道的末端处理，而不是覆盖站路线本身。该判断只描述当前 50 个共同种子，不能解释为对官方隐藏分布的概率保证。
+
+\begin{table}[H]\centering\small
+\caption{25 站环形方案的分位数与长尾检查}\label{tab:q4-quartiles}
+\begin{tabular}{lrrrr}
+\toprule
+指标 & $Q_{0.10}$ & $Q_{0.25}$ & $Q_{0.50}$ & $Q_{0.75}$ \\
+\midrule
+总虚拟时间 (s) & 7272.43 & 7446.52 & 7602.46 & 7822.57 \\
+平均清除时间 (s/源) & 484.96 & 506.73 & 550.25 & 647.05 \\
+移动距离 (m) & 26416.84 & 27230.10 & 28041.75 & 29689.84 \\
+兜底动作 (次) & 0 & 0 & 0 & 2.75 \\
+测量次数 (次) & 276.00 & 286.75 & 304.00 & 350.50 \\
+\bottomrule
+\end{tabular}
+\source{results/synthetic/q4\_optimization\_ring25/runs.csv；ring25\_q4\_joint，50 个共同种子；描述性统计。}
+\end{table}
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}[y=0.009cm,x=1cm]
-\draw[->] (0,0)--(5.4,0) node[right] {策略};\draw[->] (0,0)--(0,1000) node[above] {秒/源};
-\fill[gray!50] (0.6,0) rectangle (1.4,417.72);\fill[blue!55] (1.8,0) rectangle (2.6,333.75);
-\fill[gray!50] (3.0,0) rectangle (3.8,889.65);\fill[green!55] (4.2,0) rectangle (5.0,695.69);\fill[blue!65] (5.4,0) rectangle (6.2,587.22);
-\node[below] at (1,0) {q3基};\node[below] at (2.2,0) {q3动};\node[below] at (3.4,0) {q4基};\node[below] at (4.6,0) {q4三};\node[below] at (5.8,0) {q4环};
-\node[above] at (1,440) {417.72};\node[above] at (2.2,356) {333.75};\node[above] at (3.4,912) {889.65};\node[above] at (4.6,718) {695.69};\node[above] at (5.8,612) {587.22};
+\draw[->,draw=ink] (0,0)--(6.8,0) node[right,text=ink] {策略};\draw[->,draw=ink] (0,0)--(0,1000) node[above,text=ink] {秒/源};
+\fill[teal!65] (0.6,0) rectangle (1.4,417.72);\fill[navy!78] (1.8,0) rectangle (2.6,333.75);
+\fill[linegray!75] (3.0,0) rectangle (3.8,889.65);\fill[sand!80] (4.2,0) rectangle (5.0,695.69);\fill[coral!78] (5.4,0) rectangle (6.2,587.22);
+\node[below,text=ink] at (1,0) {q3基};\node[below,text=ink] at (2.2,0) {q3动};\node[below,text=ink] at (3.4,0) {q4基};\node[below,text=ink] at (4.6,0) {q4三};\node[below,text=ink] at (5.8,0) {q4环};
+\node[above,text=ink] at (1,440) {417.72};\node[above,text=ink] at (2.2,356) {333.75};\node[above,text=ink] at (3.4,912) {889.65};\node[above,text=ink] at (4.6,718) {695.69};\node[above,text=ink] at (5.8,612) {587.22};
 \end{tikzpicture}
 \caption{本地合成配对实验的平均秒/源}\label{fig:q4-benchmark}
 \source{results/synthetic/q3\_strategy\_comparison/summary.json、q4\_optimization/summary.json 与 q4\_optimization\_ring25/summary.json。}
@@ -75,9 +93,9 @@
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}[x=0.65cm,y=0.01cm]
-\draw[->] (0,0)--(8.2,0) node[right] {官方演练局};\draw[->] (0,0)--(0,1300) node[above] {秒/源};
-\foreach \x/\v in {1/368.57,2/406.26,3/395.72,4/1174.51,5/1045.72,6/1086.38,7/850.42}{\fill[gray!60] (\x-0.22,0) rectangle (\x+0.22,\v);\node[above,rotate=60,font=\scriptsize] at (\x,\v+15) {\v};}
-\foreach \x/\t in {1/q3,2/q3,3/q3,4/q4方,5/q4三,6/q4三,7/q4三}{\node[below,font=\scriptsize] at (\x,-55) {\t};}
+\draw[->,draw=ink] (0,0)--(8.2,0) node[right,text=ink] {官方演练局};\draw[->,draw=ink] (0,0)--(0,1300) node[above,text=ink] {秒/源};
+\foreach \x/\v/\c in {1/368.57/teal,2/406.26/teal,3/395.72/teal,4/1174.51/coral,5/1045.72/sand,6/1086.38/sand,7/850.42/sand}{\fill[\c!78] (\x-0.22,0) rectangle (\x+0.22,\v);\node[above,rotate=60,font=\scriptsize,text=ink] at (\x,\v+15) {\v};}
+\foreach \x/\t in {1/q3,2/q3,3/q3,4/q4方,5/q4三,6/q4三,7/q4三}{\node[below,font=\scriptsize,text=ink] at (\x,-55) {\t};}
 \end{tikzpicture}
 \caption{官方演练单局每源时间（不等同正式成绩）}\label{fig:q4-official}
 \source{results/practice/summary.csv；官方演练，非正式测试。}

@@ -4,12 +4,14 @@
 
 七站构造见图~\ref{fig:q3-stations}。外围站的半径并非为了逼近圆周，而是由最坏夹角 $30^\circ$ 下的距离上界反推得到；这一点使覆盖证明不依赖合成源的具体分布。
 
+具体地，将目标圆域按六个 $60^\circ$ 扇区划分。对任意源点 $g$，总有一个扇区使其与该扇区两个相邻外围站的夹角不超过 $30^\circ$。把源点到原点的距离记为 $\rho$，到相邻站点的距离平方可写为 $r^2+\rho^2-2r\rho\cos\varphi$。在 $0\le\rho\le1800$、$|\varphi|\le30^\circ$ 的范围内，选择环站半径后最大值不超过接收半径上界，于是至少一个站点能收到全向源信号。原点站覆盖环内剩余区域，构成“外环六站 + 原点”的完整发现证书。
+
 \begin{figure}[H]\centering
 \begin{tikzpicture}[x=1cm,y=1cm]
-\draw[thick] (0,0) circle (2.2);\foreach \a in {0,60,120,180,240,300}{\fill ({2.0*cos(\a)},{2.0*sin(\a)}) circle (2pt);}
-\fill (0,0) circle (2pt);\foreach \a/\b in {0/1,60/2,120/3,180/4,240/5,300/6}{\node at ({2.25*cos(\a)},{2.25*sin(\a)}) {\b};}
-\fill[red] (0.65,1.25) circle (2pt) node[above right] {源};\draw[dashed] (0.65,1.25)--(1,1.732);
-\node at (0,-2.65) {原点加六站的全向覆盖};
+\draw[thick,draw=ink] (0,0) circle (2.2);\foreach \a in {0,60,120,180,240,300}{\fill[teal] ({2.0*cos(\a)},{2.0*sin(\a)}) circle (2pt);}
+\fill[navy] (0,0) circle (2pt);\foreach \a/\b in {0/1,60/2,120/3,180/4,240/5,300/6}{\node[text=ink] at ({2.25*cos(\a)},{2.25*sin(\a)}) {\b};}
+\fill[coral] (0.65,1.25) circle (2pt) node[above right,text=ink] {源};\draw[dashed,draw=linegray] (0.65,1.25)--(1,1.732);
+\node[text=ink] at (0,-2.65) {原点加六站的全向覆盖};
 \end{tikzpicture}
 \caption{问题三七站覆盖构造}\label{fig:q3-stations}
 \source{理论构造；比例仅作示意。}
@@ -24,12 +26,14 @@
 
 覆盖证书给出“不会漏掉”的上界，清除证书给出“清除安全”的下界。设 $n_s$ 为已访问站点数、$n_m$ 为测量次数、$n_c$ 为清除请求数、$n_f$ 为光学兜底动作数，则运行记录至少保留 $(n_s,n_m,n_c,n_f)$ 以及每个频道的最终状态。比较策略时先筛除未完成局，再在完整局中比较式 \eqref{eq:time} 的虚拟时间；这样不会因某一策略提前停止而得到虚假的低耗时。
 
+在频道层面，七站流程采用“先排查、后定位”的顺序。每次到达站点先遍历尚未清除的频道，再把返回方向的频道放入主动测向队列；已清除频道不再重复测量，返回 \texttt{no\_signal} 的频道只增加排查计数。该顺序使站点覆盖证书与频道状态机解耦：即使某个频道在某一站点暂时不可接收，也不会影响其他频道的全域排查；只有所有站点访问完成且频道上界满足退出条件，运行才会生成完成证书。
+
 图~\ref{fig:q3-state} 把反馈状态机画成闭环，强调每次测量后都必须回到“更新可能区域”再决定下一动作。
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}[>=Latex,node distance=8mm]
-\node[draw,rounded corners] (a) {站点扫描};\node[draw,rounded corners,right=of a] (b) {楔形更新};\node[draw,rounded corners,right=of b] (c) {MEC判定};\node[draw,rounded corners,right=of c] (d) {清除/兜底};
-\draw[->] (a)--(b);\draw[->] (b)--(c);\draw[->] (c)--(d);\draw[->,rounded corners] (d) |- ++(0,-9mm) -| (a);
+\node[flowbox,fill=paleBlue] (a) {站点扫描};\node[flowbox,fill=paleTeal,right=of a] (b) {楔形更新};\node[flowbox,fill=paleSand,right=of b] (c) {MEC判定};\node[flowbox,fill=mist,right=of c] (d) {清除/兜底};
+\draw[flowline] (a)--(b);\draw[flowline] (b)--(c);\draw[flowline] (c)--(d);\draw[flowline,rounded corners] (d.south) |- ++(0,-9mm) -| (a.south);
 \end{tikzpicture}
 \caption{问题三在线状态机}\label{fig:q3-state}
 \source{策略伪流程。}
